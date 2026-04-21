@@ -34,7 +34,7 @@ class Episode
     private ?int $duration = null;
 
     #[ORM\Column]
-    private ?bool $isNameVf = null;
+    private ?bool $isNameVf = false;
 
     #[ORM\ManyToOne(inversedBy: 'episodes')]
     #[ORM\JoinColumn(nullable: false)]

@@ -22,16 +22,16 @@ class InvolvedGameCompany
     private ?GameCompany $gameCompany = null;
 
     #[ORM\Column]
-    private ?bool $isDeveloper = null;
+    private ?bool $isDeveloper = false;
 
     #[ORM\Column]
-    private ?bool $isPorting = null;
+    private ?bool $isPorting = false;
 
     #[ORM\Column]
-    private ?bool $isPublisher = null;
+    private ?bool $isPublisher = false;
 
     #[ORM\Column]
-    private ?bool $isSupporting = null;
+    private ?bool $isSupporting = false;
 
     public function getId(): ?int
     {

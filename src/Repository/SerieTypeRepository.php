@@ -13,7 +13,34 @@ class SerieTypeRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
+
         parent::__construct($registry, SerieType::class);
+    }
+
+
+    /**
+     * @return SerieType[] Returns an array of SerieType objects
+     */
+    public function findByPlexOrTVDB($plexId = null, $tvdbId = null): array
+    {
+
+        $qb = $this->createQueryBuilder('s');
+
+        if ($plexId) {
+            $qb->andWhere('plexId = :plexId')
+                ->setParameter('plexId', $plexId);
+        }
+
+        if ($tvdbId) {
+            $qb->andWhere('tvdbId = :tvdbId')
+                ->setParameter('tvdbId', $tvdbId);
+        }
+
+
+        return $qb
+            ->getQuery()
+            ->getResult();
+
     }
 
     //    /**

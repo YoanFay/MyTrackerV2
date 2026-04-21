@@ -26,7 +26,7 @@ class MangaTome
     private ?int $page = null;
 
     #[ORM\Column]
-    private ?bool $isLastTome = null;
+    private ?bool $isLastTome = false;
 
     #[ORM\ManyToOne(inversedBy: 'mangaTomes')]
     #[ORM\JoinColumn(nullable: false)]

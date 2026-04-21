@@ -30,7 +30,7 @@ class GameTracker
     private ?int $completeTime = null;
 
     #[ORM\Column]
-    private ?bool $isNoComplete = null;
+    private ?bool $isNoComplete = false;
 
     #[ORM\ManyToOne(inversedBy: 'gameTrackers')]
     #[ORM\JoinColumn(nullable: false)]

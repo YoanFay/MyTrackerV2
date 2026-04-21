@@ -16,6 +16,9 @@ class Serie
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $name = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $plexId = null;
 
@@ -23,7 +26,7 @@ class Serie
     private ?int $tvdbId = null;
 
     #[ORM\Column]
-    private ?bool $isVfName = null;
+    private ?bool $isVfName = false;
 
     #[ORM\Column(length: 255)]
     private ?string $slug = null;
@@ -50,7 +53,7 @@ class Serie
     private ?string $nextAiredFormat = null;
 
     #[ORM\Column(nullable: true)]
-    private ?int $score = null;
+    private ?int $score = 0;
 
     #[ORM\ManyToOne(inversedBy: 'series')]
     #[ORM\JoinColumn(nullable: false)]
@@ -112,6 +115,18 @@ class Serie
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): static
+    {
+        $this->name = $name;
+
+        return $this;
     }
 
     public function getPlexId(): ?string

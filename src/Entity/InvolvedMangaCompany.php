@@ -22,13 +22,13 @@ class InvolvedMangaCompany
     private ?MangaCompany $mangaCompany = null;
 
     #[ORM\Column]
-    private ?bool $isAuthor = null;
+    private ?bool $isAuthor = false;
 
     #[ORM\Column]
-    private ?bool $isEditor = null;
+    private ?bool $isEditor = false;
 
     #[ORM\Column]
-    private ?bool $isDesigner = null;
+    private ?bool $isDesigner = false;
 
     public function getId(): ?int
     {

@@ -22,13 +22,13 @@ class InvolvedSerieCompany
     private ?SerieCompany $company = null;
 
     #[ORM\Column]
-    private ?bool $isNetwork = null;
+    private ?bool $isNetwork = false;
 
     #[ORM\Column]
-    private ?bool $isStudio = null;
+    private ?bool $isStudio = false;
 
     #[ORM\Column]
-    private ?bool $isProducer = null;
+    private ?bool $isProducer = false;
 
     public function getId(): ?int
     {
