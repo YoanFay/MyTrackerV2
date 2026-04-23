@@ -87,4 +87,11 @@ class TVDBGenre
 
         return $this;
     }
+
+    public function hasSerie(Serie $serie): bool
+    {
+        return $this->series->exists(function ($key, Serie $s) use ($serie) {
+            return $s->getId() === $serie->getId();
+        });
+    }
 }

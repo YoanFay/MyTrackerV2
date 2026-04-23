@@ -16,7 +16,7 @@ class TVDBTag
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $namenameEng = null;
+    private ?string $nameEng = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nameFra = null;
@@ -40,14 +40,14 @@ class TVDBTag
         return $this->id;
     }
 
-    public function getNamenameEng(): ?string
+    public function getNameEng(): ?string
     {
-        return $this->namenameEng;
+        return $this->nameEng;
     }
 
-    public function setNamenameEng(?string $namenameEng): static
+    public function setNameEng(?string $nameEng): static
     {
-        $this->namenameEng = $namenameEng;
+        $this->nameEng = $nameEng;
 
         return $this;
     }
@@ -101,5 +101,12 @@ class TVDBTag
         }
 
         return $this;
+    }
+
+    public function hasSerie(Serie $serie): bool
+    {
+        return $this->series->exists(function ($key, Serie $s) use ($serie) {
+            return $s->getId() === $serie->getId();
+        });
     }
 }

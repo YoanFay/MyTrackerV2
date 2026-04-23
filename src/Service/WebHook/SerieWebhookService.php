@@ -17,7 +17,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use JetBrains\PhpStorm\NoReturn;
 
-class AnimeWebhookService
+class SerieWebhookService
 {
 
     private SerieRepository $serieRepository;
@@ -57,12 +57,23 @@ class AnimeWebhookService
     }
 
 
-    public function addAnime($data, $user): void
+    public function addSerie($data, $user, $isAnime = false): void
     {
 
-        if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Anime'])) {
-            $serieType = $this->addAnimeType();
+        if ($isAnime) {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Anime'])) {
+                $serieType = $this->addAnimeType();
+            }
+
+        } else {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Séries'])) {
+                $serieType = $this->addSerieType();
+            }
+
         }
+
 
         $episodeTVDBId = null;
 
@@ -75,23 +86,23 @@ class AnimeWebhookService
 
         }
 
-        $animePlexId = str_replace("plex://show/", "", $data['grandparentGuid']);
+        $seriePlexId = str_replace("plex://show/", "", $data['grandparentGuid']);
         $episodePlexId = str_replace("plex://episode/", "", $data['guid']);
 
-        if (!$anime = $this->isSerieExist($animePlexId, $episodeTVDBId)) {
+        if (!$serie = $this->isSerieExist($seriePlexId, $episodeTVDBId)) {
 
-            $anime = new Serie();
-            $anime->setName($data['grandparentTitle']);
-            $anime->setPlexId($animePlexId);
-            $anime->setSlug($this->stringService->slugify($data['grandparentTitle']));
-            $anime->setSerieType($serieType);
+            $serie = new Serie();
+            $serie->setName($data['grandparentTitle']);
+            $serie->setPlexId($seriePlexId);
+            $serie->setSlug($this->stringService->slugify($data['grandparentTitle']));
+            $serie->setSerieType($serieType);
 
         }
 
-        if (!$episode = $this->isEpisodeExist($anime, $data['parentIndex'], $data['index'])) {
+        if (!$episode = $this->isEpisodeExist($serie, $data['parentIndex'], $data['index'])) {
 
             $episode = new Episode();
-            $episode->setSerie($anime);
+            $episode->setSerie($serie);
             $episode->setPlexId($episodePlexId);
             $episode->setTvdbId($episodeTVDBId);
 
@@ -99,12 +110,19 @@ class AnimeWebhookService
 
                 $this->TVDBService->createEpisode($episode);
 
-                if (!$anime->getTvdbId() || !$anime->isVfName()) {
+                if (!$serie->getTvdbId() || !$serie->isVfName()) {
                     if ($tvdbAnimeId = $this->TVDBService->getSerieIdByEpisodeId($episode->getTvdbId())) {
-                        $anime->setTvdbId($tvdbAnimeId);
-                        $this->TVDBService->updateSerieInfo($anime);
+                        $serie->setTvdbId($tvdbAnimeId);
+                        $this->TVDBService->updateSerieInfo($serie);
 
-                        $this->animeDataUpdate($anime);
+
+                        if ($isAnime) {
+
+                            $this->aniListService->newAnime($serie);
+                        } else {
+
+                            $this->TVDBService->newSerie($serie);
+                        }
                     }
                 }
 
@@ -117,35 +135,22 @@ class AnimeWebhookService
 
             }
 
-            dump($anime->getName()." : Saison ".$episode->getSeasonNumber()." - Episode ".$episode->getEpisodeNumber());
+            dump($serie->getName()." : Saison ".$episode->getSeasonNumber()." - Episode ".$episode->getEpisodeNumber());
 
         }
 
-        $this->manager->persist($anime);
+        $this->manager->persist($serie);
         $this->manager->persist($episode);
 
         $episodeShow = new EpisodeShow();
         $episodeShow->setUser($user);
         $episodeShow->setEpisode($episode);
-        $episodeShow->setShowDate(new DateTime());
+        $episodeShow->setShowDate($data['showDate']);
 
         $this->manager->persist($episodeShow);
 
         $this->manager->flush();
 
-    }
-
-
-    private function addAnimeType(): SerieType
-    {
-
-        $serieType = new SerieType();
-        $serieType->setName("Anime");
-        $serieType->setSlug("anime");
-        $this->manager->persist($serieType);
-        $this->manager->flush();
-
-        return $serieType;
     }
 
 
@@ -194,11 +199,29 @@ class AnimeWebhookService
     }
 
 
-    #[NoReturn] private function animeDataUpdate($anime): void
+    private function addAnimeType(): SerieType
     {
 
-        $this->aniListService->newAnime($anime);
+        $serieType = new SerieType();
+        $serieType->setName("Anime");
+        $serieType->setSlug("anime");
+        $this->manager->persist($serieType);
+        $this->manager->flush();
 
+        return $serieType;
+    }
+
+
+    private function addSerieType(): SerieType
+    {
+
+        $serieType = new SerieType();
+        $serieType->setName("Série");
+        $serieType->setSlug("serie");
+        $this->manager->persist($serieType);
+        $this->manager->flush();
+
+        return $serieType;
     }
 
 }

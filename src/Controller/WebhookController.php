@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
-use App\Service\WebHook\AnimeWebhookService;
+use App\Service\WebHook\SerieWebhookService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,13 +13,19 @@ final class WebhookController extends AbstractController
 {
     #[Route('/webhook', name: 'app_webhook')]
     public function index(
-        AnimeWebhookService $animeWebhookService,
+        SerieWebhookService $serieWebhookService,
         UserRepository $userRepository,
     ): Response
     {
 
         //$directory = $this->getParameter('kernel.project_dir') . '/public/webhook/Anime/';
-        $files = glob($this->getParameter('kernel.project_dir').'/public/webhook/Anime/*.json');
+
+        $baseDir = $this->getParameter('kernel.project_dir').'/public/webhook';
+
+        $files = array_merge(
+            glob($baseDir.'/Anime/*.json'),
+            glob($baseDir.'/Séries/*.json')
+        );
 
         foreach ($files as $file) {
             $string = file_get_contents($file);
@@ -36,22 +42,32 @@ final class WebhookController extends AbstractController
 
                 $data = $json['Metadata'];
 
+                // A SUPPRIME APRES TEST
+                $data['showDate'] = \DateTime::createFromFormat('Y-m-d-H-i-s', str_replace('.json', '', basename($file)));
+
                 $library = str_replace("Quasinas ", "", $data['librarySectionTitle']);
 
                 switch ($library) {
                 case "Anime":
                     try {
-                        $animeWebhookService->addAnime($data, $user);
+                        $serieWebhookService->addSerie($data, $user, true);
                     }catch (\Exception $e){
                         dump($e);
                         dump($data);
                     }
 
                     break;
-                case "Série":
+                case "Séries":
+                    try {
+                        $serieWebhookService->addSerie($data, $user);
+                    }catch (\Exception $e){
+                        dump($e);
+                        dump($data);
+                    }
+
                     break;
                 default:
-                    dump($data);
+                    dump($json);
                 }
             }
         }
