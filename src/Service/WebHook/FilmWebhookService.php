@@ -91,7 +91,7 @@ class FilmWebhookService
         $show = new MovieShow();
         $show->setUser($user);
         $show->setMovie($movie);
-        $show->setShowDate($data['showDate']);
+        $show->setShowDate(new DateTime());
 
         $this->manager->persist($show);
         $this->manager->flush();

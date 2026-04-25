@@ -24,18 +24,21 @@ final class WebhookController extends AbstractController
 
         ini_set('max_execution_time', 0);
 
-        $baseDir = $this->getParameter('kernel.project_dir').'/public/webhook';
+        /*$baseDir = $this->getParameter('kernel.project_dir').'/public/webhook';
 
         $files = array_merge(
         //glob($baseDir.'/Anime/*.json'),
         //glob($baseDir.'/Séries/*.json'),
+        glob($baseDir.'/Replay/*.json'),
         //glob($baseDir.'/Musique/*.json'),
             glob($baseDir.'/Films/*.json'),
-        );
+        );*/
 
-        foreach ($files as $file) {
-            $string = file_get_contents($file);
-            $json = json_decode($string, true);
+        /*foreach ($files as $file) {
+            $string = file_get_contents($file);*/
+
+            $payload = $_POST['payload'];
+            $json = json_decode($payload, true);
             if ($json['event'] === "media.scrobble") {
 
                 $plexName = $json["Account"]['title'];
@@ -49,7 +52,7 @@ final class WebhookController extends AbstractController
                 $data = $json['Metadata'];
 
                 // A SUPPRIME APRES TEST
-                $data['showDate'] = \DateTime::createFromFormat('Y-m-d-H-i-s', str_replace('.json', '', basename($file)));
+                //$data['showDate'] = \DateTime::createFromFormat('Y-m-d-H-i-s', str_replace('.json', '', basename($file)));
 
                 $library = str_replace(['Quasinas ', ' A Deux', ' Chat', ' Doudou'], "", $data['librarySectionTitle']);
 
@@ -90,11 +93,20 @@ final class WebhookController extends AbstractController
                     }
 
                     break;
+                case "Replay":
+                    try {
+                        $serieWebhookService->addSerie($data, $user, false, true);
+                    } catch (\Exception $e) {
+                        dump($e);
+                        dump($data);
+                    }
+
+                    break;
                 default:
                     dump($json);
                 }
             }
-        }
+        //}
 
         return new Response('OK');
     }

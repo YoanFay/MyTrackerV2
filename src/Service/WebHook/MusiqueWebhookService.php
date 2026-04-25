@@ -12,6 +12,7 @@ use App\Repository\MBIDTagTypeRepository;
 use App\Repository\MusicArtistRepository;
 use App\Repository\MusicRepository;
 use App\Service\API\MusicBrainzService;
+use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 
@@ -117,7 +118,7 @@ class MusiqueWebhookService
         $musicListen = new MusicListen();
         $musicListen->setUser($user);
         $musicListen->setMusic($music);
-        $musicListen->setListenAt($data['showDate']);
+        $musicListen->setListenAt(new DateTime());
 
         $this->manager->persist($musicListen);
         $this->manager->flush();

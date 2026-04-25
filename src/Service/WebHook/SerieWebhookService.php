@@ -57,13 +57,23 @@ class SerieWebhookService
     }
 
 
-    public function addSerie($data, $user, $isAnime = false): void
+    /**
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function addSerie($data, $user, $isAnime = false, $isReplay = false): void
     {
 
         if ($isAnime) {
 
             if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Anime'])) {
                 $serieType = $this->addAnimeType();
+            }
+
+        }elseif($isReplay){
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Replay'])) {
+                $serieType = $this->addReplayType();
             }
 
         } else {
@@ -145,7 +155,7 @@ class SerieWebhookService
         $episodeShow = new EpisodeShow();
         $episodeShow->setUser($user);
         $episodeShow->setEpisode($episode);
-        $episodeShow->setShowDate($data['showDate']);
+        $episodeShow->setShowDate(new DateTime());
 
         $this->manager->persist($episodeShow);
 
@@ -157,22 +167,22 @@ class SerieWebhookService
     private function isSerieExist($plexId, $episodeTVDBId): bool|object
     {
 
-        $anime = $this->serieRepository->findOneBy(['plexId' => $plexId]);
+        $serie = $this->serieRepository->findOneBy(['plexId' => $plexId]);
 
-        if ($anime) {
-            return $anime;
+        if ($serie) {
+            return $serie;
         }
 
         if ($episodeTVDBId) {
 
             if ($tvdbAnimeId = $this->TVDBService->getSerieIdByEpisodeId($episodeTVDBId)) {
 
-                /** @var Serie $anime */
-                $anime = $this->serieRepository->findOneBy(['tvdbId' => $tvdbAnimeId]);
+                /** @var Serie $serie */
+                $serie = $this->serieRepository->findOneBy(['tvdbId' => $tvdbAnimeId]);
 
-                if ($anime) {
-                    $anime->setTVDBId($plexId);
-                    return $anime;
+                if ($serie) {
+                    $serie->setTVDBId($plexId);
+                    return $serie;
                 }
 
             }
@@ -218,6 +228,19 @@ class SerieWebhookService
         $serieType = new SerieType();
         $serieType->setName("Série");
         $serieType->setSlug("serie");
+        $this->manager->persist($serieType);
+        $this->manager->flush();
+
+        return $serieType;
+    }
+
+
+    private function addReplayType(): SerieType
+    {
+
+        $serieType = new SerieType();
+        $serieType->setName("Replay");
+        $serieType->setSlug("replay");
         $this->manager->persist($serieType);
         $this->manager->flush();
 
