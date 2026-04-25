@@ -87,4 +87,11 @@ class TMDBGenre
 
         return $this;
     }
+
+    public function hasMovie(Movie $movie): bool
+    {
+        return $this->movies->exists(function ($key, Movie $m) use ($movie) {
+            return $m->getId() === $movie->getId();
+        });
+    }
 }

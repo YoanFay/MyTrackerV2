@@ -24,6 +24,12 @@ class MusicArtist
     #[ORM\OneToMany(targetEntity: Music::class, mappedBy: 'musicArtist')]
     private Collection $music;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $mbid = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $plexId = null;
+
     public function __construct()
     {
         $this->music = new ArrayCollection();
@@ -72,6 +78,30 @@ class MusicArtist
                 $music->setMusicArtist(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getMbid(): ?string
+    {
+        return $this->mbid;
+    }
+
+    public function setMbid(?string $mbid): static
+    {
+        $this->mbid = $mbid;
+
+        return $this;
+    }
+
+    public function getPlexId(): ?string
+    {
+        return $this->plexId;
+    }
+
+    public function setPlexId(string $plexId): static
+    {
+        $this->plexId = $plexId;
 
         return $this;
     }

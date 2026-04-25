@@ -23,7 +23,7 @@ class Movie
     private ?string $slug = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $tmbdId = null;
+    private ?string $tmdbId = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $plexId = null;
@@ -84,14 +84,14 @@ class Movie
         return $this;
     }
 
-    public function getTmbdId(): ?string
+    public function getTmdbId(): ?string
     {
-        return $this->tmbdId;
+        return $this->tmdbId;
     }
 
-    public function setTmbdId(?string $tmbdId): static
+    public function setTmdbId(?string $tmdbId): static
     {
-        $this->tmbdId = $tmbdId;
+        $this->tmdbId = $tmdbId;
 
         return $this;
     }

@@ -58,3 +58,4 @@ docker-compose.yml
 !.env.example
 /.idea/
 /public/webhook/
+/public/image/

@@ -19,5 +19,13 @@ services:
     App\:
         resource: '../src/'
 
+    App\Service\API\TMDBService:
+        arguments:
+            $tmdbToken: '%env(TMDB_TOKEN)%'
+
+    App\Service\API\TVDBService:
+        arguments:
+            $tvdbKey: '%env(TVDB_KEY)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

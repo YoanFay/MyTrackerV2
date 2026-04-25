@@ -14,6 +14,7 @@ use App\Repository\SerieCompanyRepository;
 use App\Repository\TVDBGenreRepository;
 use App\Repository\TVDBTagRepository;
 use App\Repository\TVDBTagTypeRepository;
+use App\Service\ImageService;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use GuzzleHttp\Client;
@@ -40,6 +41,10 @@ class TVDBService
 
     private TVDBGenreRepository $TVDBGenreRepository;
 
+    private ImageService $imageService;
+
+    private string $tvdbKey;
+
     private array $companyCache = [];
 
     private array $tagCache = [];
@@ -56,7 +61,9 @@ class TVDBService
         InvolvedSerieCompanyRepository $involvedSerieCompanyRepository,
         TVDBTagRepository              $TVDBTagRepository,
         TVDBTagTypeRepository          $TVDBTagTypeRepository,
-        TVDBGenreRepository $TVDBGenreRepository,
+        TVDBGenreRepository            $TVDBGenreRepository,
+        ImageService                   $imageService,
+        string                         $tvdbKey,
     )
     {
 
@@ -67,6 +74,8 @@ class TVDBService
         $this->TVDBTagRepository = $TVDBTagRepository;
         $this->TVDBTagTypeRepository = $TVDBTagTypeRepository;
         $this->TVDBGenreRepository = $TVDBGenreRepository;
+        $this->imageService = $imageService;
+        $this->tvdbKey = $tvdbKey;
     }
 
 
@@ -126,7 +135,7 @@ class TVDBService
 
             $apiUrl = 'https://api4.thetvdb.com/v4';
 
-            $apiToken = '8f3a7d8f-c61f-4bf7-930d-65eeab4b26ad';
+            $apiToken = $this->tvdbKey;
 
             $response = $client->post($apiUrl."/login", [
                 'headers' => [
@@ -225,19 +234,7 @@ class TVDBService
             return;
         }
 
-        $cover = imagecreatefromstring(file_get_contents($image['image']));
-
-        $dir = $projectDir."/public/image/serie/poster/";
-
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
-
-        // Chemin où enregistrer l'image
-        $filename = $serie->getSlug().'.jpeg';
-
-        // Téléchargement et enregistrement de l'image
-        imagejpeg($cover, $dir.$filename, 100);
+        $this->imageService->addImage("serie/poster/", $serie->getSlug(), $image['image']);
     }
 
 
@@ -358,6 +355,71 @@ class TVDBService
     }
 
 
+    public function tvdbTagTreatment(Serie $serie, $tag): void
+    {
+
+        if (isset($this->tagTypeCache[$tag['tagName']])) {
+            $tvdbTagType = $this->tagTypeCache[$tag['tagName']];
+        } else {
+            $tvdbTagType = $this->TVDBTagTypeRepository->findOneBy(['nameEng' => $tag['tagName']]);
+
+            if (!$tvdbTagType) {
+                $tvdbTagType = new TVDBTagType();
+                $tvdbTagType->setNameEng($tag['tagName']);
+                $this->manager->persist($tvdbTagType);
+            }
+
+            $this->tagTypeCache[$tag['tagName']] = $tvdbTagType;
+        }
+
+        if (isset($this->tagCache[$tag['name']])) {
+            $tvdbTag = $this->tagCache[$tag['name']];
+        } else {
+            $tvdbTag = $this->TVDBTagRepository->findOneBy(['nameEng' => $tag['name']]);
+
+            if (!$tvdbTag) {
+                $tvdbTag = new TVDBTag();
+                $tvdbTag->setNameEng($tag['name']);
+                $tvdbTag->setTvdbTagType($tvdbTagType);
+                $this->manager->persist($tvdbTag);
+            }
+
+            $this->tagCache[$tag['name']] = $tvdbTag;
+        }
+
+        if (!$tvdbTag->hasSerie($serie)) {
+            $tvdbTag->addSeries($serie);
+            $this->manager->persist($tvdbTag);
+        }
+
+    }
+
+
+    public function tvdbGenreTreatment(Serie $serie, $genre): void
+    {
+
+        if (isset($this->genreCache[$genre['name']])) {
+            $tvdbGenre = $this->genreCache[$genre['name']];
+        } else {
+            $tvdbGenre = $this->TVDBGenreRepository->findOneBy(['nameEng' => $genre['name']]);
+
+            if (!$tvdbGenre) {
+                $tvdbGenre = new TVDBGenre();
+                $tvdbGenre->setNameEng($genre['name']);
+                $this->manager->persist($tvdbGenre);
+            }
+
+            $this->genreCache[$genre['name']] = $tvdbGenre;
+        }
+
+        if (!$tvdbGenre->hasSerie($serie)) {
+            $tvdbGenre->addSeries($serie);
+            $this->manager->persist($tvdbGenre);
+        }
+
+    }
+
+
     public function companyTreatment($serie, $company): void
     {
 
@@ -413,72 +475,6 @@ class TVDBService
             $involved->setIsStudio($isStudio);
 
             $this->manager->persist($involved);
-        }
-
-    }
-
-
-    public function tvdbTagTreatment(Serie $serie, $tag): void
-    {
-
-        if (isset($this->tagTypeCache[$tag['tagName']])) {
-            $tvdbTagType = $this->tagTypeCache[$tag['tagName']];
-        } else {
-            $tvdbTagType = $this->TVDBTagTypeRepository->findOneBy(['nameEng' => $tag['tagName']]);
-
-            if (!$tvdbTagType) {
-                $tvdbTagType = new TVDBTagType();
-                $tvdbTagType->setNameEng($tag['tagName']);
-                $this->manager->persist($tvdbTagType);
-            }
-
-            $this->tagTypeCache[$tag['tagName']] = $tvdbTagType;
-        }
-
-        if (isset($this->tagCache[$tag['name']])) {
-            $tvdbTag = $this->tagCache[$tag['name']];
-        } else {
-            $tvdbTag = $this->TVDBTagRepository->findOneBy(['nameEng' => $tag['name']]);
-
-            if (!$tvdbTag) {
-                $tvdbTag = new TVDBTag();
-                $tvdbTag->setNameEng($tag['name']);
-                $tvdbTag->setTvdbTagType($tvdbTagType);
-                $this->manager->persist($tvdbTag);
-            }
-
-            $this->tagCache[$tag['name']] = $tvdbTag;
-        }
-
-        if(!$tvdbTag->hasSerie($serie))
-        {
-            $tvdbTag->addSeries($serie);
-            $this->manager->persist($tvdbTag);
-        }
-
-    }
-
-    public function tvdbGenreTreatment(Serie $serie, $genre): void
-    {
-
-        if (isset($this->genreCache[$genre['name']])) {
-            $tvdbGenre = $this->genreCache[$genre['name']];
-        } else {
-            $tvdbGenre = $this->TVDBGenreRepository->findOneBy(['nameEng' => $genre['name']]);
-
-            if (!$tvdbGenre) {
-                $tvdbGenre = new TVDBGenre();
-                $tvdbGenre->setNameEng($genre['name']);
-                $this->manager->persist($tvdbGenre);
-            }
-
-            $this->genreCache[$genre['name']] = $tvdbGenre;
-        }
-
-        if(!$tvdbGenre->hasSerie($serie))
-        {
-            $tvdbGenre->addSeries($serie);
-            $this->manager->persist($tvdbGenre);
         }
 
     }

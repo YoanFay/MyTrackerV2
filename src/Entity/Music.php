@@ -39,6 +39,9 @@ class Music
     #[ORM\ManyToMany(targetEntity: MBIDTag::class, inversedBy: 'music')]
     private Collection $musicTags;
 
+    #[ORM\Column(length: 255)]
+    private ?string $plexId = null;
+
     public function __construct()
     {
         $this->musicListens = new ArrayCollection();
@@ -148,6 +151,18 @@ class Music
     public function removeMusicTag(MBIDTag $musicTag): static
     {
         $this->musicTags->removeElement($musicTag);
+
+        return $this;
+    }
+
+    public function getPlexId(): ?string
+    {
+        return $this->plexId;
+    }
+
+    public function setPlexId(string $plexId): static
+    {
+        $this->plexId = $plexId;
 
         return $this;
     }
