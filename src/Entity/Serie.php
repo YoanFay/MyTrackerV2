@@ -90,16 +90,16 @@ class Serie
     private Collection $tvdbGenres;
 
     /**
-     * @var Collection<int, AnimeTheme>
-     */
-    #[ORM\ManyToMany(targetEntity: AnimeTheme::class, inversedBy: 'series')]
-    private Collection $animeThemes;
-
-    /**
      * @var Collection<int, AnimeGenre>
      */
     #[ORM\ManyToMany(targetEntity: AnimeGenre::class, inversedBy: 'series')]
     private Collection $animeGenres;
+
+    /**
+     * @var Collection<int, SerieAnimeTheme>
+     */
+    #[ORM\OneToMany(targetEntity: SerieAnimeTheme::class, mappedBy: 'serie')]
+    private Collection $serieAnimeThemes;
 
     public function __construct()
     {
@@ -108,8 +108,8 @@ class Serie
         $this->involvedSerieCompanies = new ArrayCollection();
         $this->tvdbTags = new ArrayCollection();
         $this->tvdbGenres = new ArrayCollection();
-        $this->animeThemes = new ArrayCollection();
         $this->animeGenres = new ArrayCollection();
+        $this->serieAnimeThemes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -424,30 +424,6 @@ class Serie
     }
 
     /**
-     * @return Collection<int, AnimeTheme>
-     */
-    public function getAnimeThemes(): Collection
-    {
-        return $this->animeThemes;
-    }
-
-    public function addAnimeTheme(AnimeTheme $animeTheme): static
-    {
-        if (!$this->animeThemes->contains($animeTheme)) {
-            $this->animeThemes->add($animeTheme);
-        }
-
-        return $this;
-    }
-
-    public function removeAnimeTheme(AnimeTheme $animeTheme): static
-    {
-        $this->animeThemes->removeElement($animeTheme);
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, AnimeGenre>
      */
     public function getAnimeGenres(): Collection
@@ -467,6 +443,36 @@ class Serie
     public function removeAnimeGenre(AnimeGenre $animeGenre): static
     {
         $this->animeGenres->removeElement($animeGenre);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SerieAnimeTheme>
+     */
+    public function getSerieAnimeThemes(): Collection
+    {
+        return $this->serieAnimeThemes;
+    }
+
+    public function addSerieAnimeTheme(SerieAnimeTheme $serieAnimeTheme): static
+    {
+        if (!$this->serieAnimeThemes->contains($serieAnimeTheme)) {
+            $this->serieAnimeThemes->add($serieAnimeTheme);
+            $serieAnimeTheme->setSerie($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSerieAnimeTheme(SerieAnimeTheme $serieAnimeTheme): static
+    {
+        if ($this->serieAnimeThemes->removeElement($serieAnimeTheme)) {
+            // set the owning side to null (unless already changed)
+            if ($serieAnimeTheme->getSerie() === $this) {
+                $serieAnimeTheme->setSerie(null);
+            }
+        }
 
         return $this;
     }

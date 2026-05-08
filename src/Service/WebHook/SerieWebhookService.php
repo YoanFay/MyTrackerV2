@@ -6,6 +6,7 @@ use App\Entity\Episode;
 use App\Entity\EpisodeShow;
 use App\Entity\Serie;
 use App\Entity\SerieType;
+use App\Entity\User;
 use App\Repository\EpisodeRepository;
 use App\Repository\SerieRepository;
 use App\Repository\SerieTypeRepository;
@@ -15,7 +16,9 @@ use App\Service\API\TVDBService;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
+use GuzzleHttp\Exception\GuzzleException;
 use JetBrains\PhpStorm\NoReturn;
+use Psr\Cache\InvalidArgumentException;
 
 class SerieWebhookService
 {
@@ -33,6 +36,8 @@ class SerieWebhookService
     private AniListService $aniListService;
 
     private ObjectManager $manager;
+
+    private ManagerRegistry $managerRegistry;
 
 
     public function __construct(
@@ -53,13 +58,14 @@ class SerieWebhookService
         $this->TVDBService = $TVDBService;
         $this->aniListService = $aniListService;
         $this->manager = $managerRegistry->getManager();
+        $this->managerRegistry = $managerRegistry;
 
     }
 
 
     /**
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
      */
     public function addSerie($data, $user, $isAnime = false, $isReplay = false): void
     {
@@ -70,7 +76,7 @@ class SerieWebhookService
                 $serieType = $this->addAnimeType();
             }
 
-        }elseif($isReplay){
+        } else if ($isReplay) {
 
             if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Replay'])) {
                 $serieType = $this->addReplayType();
@@ -164,6 +170,45 @@ class SerieWebhookService
     }
 
 
+    private function addAnimeType(): SerieType
+    {
+
+        $serieType = new SerieType();
+        $serieType->setName("Anime");
+        $serieType->setSlug("anime");
+        $this->manager->persist($serieType);
+        $this->manager->flush();
+
+        return $serieType;
+    }
+
+
+    private function addReplayType(): SerieType
+    {
+
+        $serieType = new SerieType();
+        $serieType->setName("Replay");
+        $serieType->setSlug("replay");
+        $this->manager->persist($serieType);
+        $this->manager->flush();
+
+        return $serieType;
+    }
+
+
+    private function addSerieType(): SerieType
+    {
+
+        $serieType = new SerieType();
+        $serieType->setName("Séries");
+        $serieType->setSlug("series");
+        $this->manager->persist($serieType);
+        $this->manager->flush();
+
+        return $serieType;
+    }
+
+
     private function isSerieExist($plexId, $episodeTVDBId): bool|object
     {
 
@@ -209,42 +254,105 @@ class SerieWebhookService
     }
 
 
-    private function addAnimeType(): SerieType
+    /**
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function importSerie(array $data, User $user): void
     {
 
-        $serieType = new SerieType();
-        $serieType->setName("Anime");
-        $serieType->setSlug("anime");
-        $this->manager->persist($serieType);
+        $user = $this->manager->find(User::class, $user->getId());
+
+        $episodeTVDBId = $data[0];
+        $episodePlexId = $data[1];
+        $episodeSeasonNumber = $data[2];
+        $episodeNumber = $data[3];
+        $serieTVDBId = $data[4];
+        $seriePlexId = $data[5];
+        $serieType = $data[6];
+        $showDate = $data[7];
+
+        if ($serieType === "Anime") {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Anime'])) {
+                $serieType = $this->addAnimeType();
+            }
+
+        } else if ($serieType === "Replay") {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Replay'])) {
+                $serieType = $this->addReplayType();
+            }
+
+        } else if ($serieType === "Séries") {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Séries'])) {
+                $serieType = $this->addSerieType();
+            }
+
+        }
+
+        if (!$serie = $this->isSerieExist($seriePlexId, $episodeTVDBId)) {
+
+            $serie = new Serie();
+            $serie->setPlexId($seriePlexId);
+            $serie->setSerieType($serieType);
+            $serie->setTvdbId($serieTVDBId);
+
+            $this->TVDBService->updateSerieInfo($serie);
+
+            if ($serieType->getName() === "Anime") {
+
+                $this->aniListService->newAnime($serie);
+            } else {
+
+                $this->TVDBService->newSerie($serie);
+            }
+
+            $this->manager->persist($serie);
+
+        }
+
+        if (!$episode = $this->isEpisodeExist($serie, $episodeSeasonNumber, $episodeNumber)) {
+
+            $episode = new Episode();
+            $episode->setSerie($serie);
+            $episode->setPlexId($episodePlexId);
+            $episode->setTvdbId($episodeTVDBId);
+            $episode->setEpisodeNumber($episodeNumber);
+            $episode->setSeasonNumber($episodeSeasonNumber);
+
+            if ($episode->getTvdbId()) {
+
+                $this->TVDBService->createEpisode($episode);
+
+            }
+
+            dump($serie->getName()." : Saison ".$episode->getSeasonNumber()." - Episode ".$episode->getEpisodeNumber());
+            $this->manager->persist($episode);
+
+        }
+
+        $episodeShow = new EpisodeShow();
+        $episodeShow->setUser($user);
+        $episodeShow->setEpisode($episode);
+        $episodeShow->setShowDate(DateTime::createFromFormat('Y-m-d H-i-s', $showDate));
+
+        $this->manager->persist($episodeShow);
         $this->manager->flush();
 
-        return $serieType;
+
     }
 
-
-    private function addSerieType(): SerieType
+    // SerieWebhookService.php
+    public function clearCaches(): void
     {
+        // Réinitialiser l'ObjectManager avec le nouveau après reset
+        $this->manager = $this->managerRegistry->getManager();
 
-        $serieType = new SerieType();
-        $serieType->setName("Série");
-        $serieType->setSlug("serie");
-        $this->manager->persist($serieType);
-        $this->manager->flush();
-
-        return $serieType;
-    }
-
-
-    private function addReplayType(): SerieType
-    {
-
-        $serieType = new SerieType();
-        $serieType->setName("Replay");
-        $serieType->setSlug("replay");
-        $this->manager->persist($serieType);
-        $this->manager->flush();
-
-        return $serieType;
+        // Propager aux services dépendants
+        $this->aniListService->clearCache();
+        $this->TVDBService->clearCache(); // si TVDBService a aussi des caches
     }
 
 }

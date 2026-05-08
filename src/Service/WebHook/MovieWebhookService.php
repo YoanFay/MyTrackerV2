@@ -2,26 +2,18 @@
 
 namespace App\Service\WebHook;
 
-use App\Entity\Episode;
-use App\Entity\EpisodeShow;
 use App\Entity\Movie;
 use App\Entity\MovieShow;
-use App\Entity\Serie;
-use App\Entity\SerieType;
-use App\Repository\EpisodeRepository;
 use App\Repository\MovieRepository;
-use App\Repository\SerieRepository;
-use App\Repository\SerieTypeRepository;
-use App\Service\API\AniListService;
 use App\Service\API\TMDBService;
-use App\Service\StringService;
-use App\Service\API\TVDBService;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
-use JetBrains\PhpStorm\NoReturn;
+use Exception;
+use GuzzleHttp\Exception\GuzzleException;
+use Psr\Cache\InvalidArgumentException;
 
-class FilmWebhookService
+class MovieWebhookService
 {
 
     private MovieRepository $movieRepository;
@@ -46,8 +38,8 @@ class FilmWebhookService
 
 
     /**
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
      */
     public function addMovie($data, $user): void
     {
@@ -92,6 +84,52 @@ class FilmWebhookService
         $show->setUser($user);
         $show->setMovie($movie);
         $show->setShowDate(new DateTime());
+
+        $this->manager->persist($show);
+        $this->manager->flush();
+
+    }
+
+
+    /**
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     * @throws Exception
+     */
+    public function importMovie($data, $user): void
+    {
+
+        $plexId = $data[1];
+        $TMDBId = $data[0];
+
+        if (!$TMDBId) {
+            return;
+        }
+
+        $param = ['tmdbId' => $TMDBId];
+
+        if ($plexId) {
+            $param += ['plexId' => $plexId];
+        }
+
+        $movie = $this->movieRepository->findOneBy($param);
+
+        if (!$movie) {
+
+            $movie = new Movie();
+            $movie->setPlexId($plexId);
+            $movie->setTmdbId($TMDBId);
+
+            $this->TMDBService->updateMovieInfo($movie);
+
+            $this->manager->persist($movie);
+
+        }
+
+        $show = new MovieShow();
+        $show->setUser($user);
+        $show->setMovie($movie);
+        $show->setShowDate(DateTime::createFromFormat('Y-m-d H-i-s', $data[2]));
 
         $this->manager->persist($show);
         $this->manager->flush();

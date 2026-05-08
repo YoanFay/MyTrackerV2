@@ -112,7 +112,7 @@ class TMDBService
     }
 
 
-    public function genreTreatment($movie, $genre): void
+    public function genreTreatment(Movie $movie, $genre): void
     {
 
         if (isset($this->genreCache[$genre['name']])) {
@@ -130,8 +130,8 @@ class TMDBService
         }
 
         if (!$tmdbGenre->hasMovie($movie)) {
-            $tmdbGenre->addMovie($movie);
             $this->manager->persist($tmdbGenre);
+            $movie->addTmdbGenre($tmdbGenre);
         }
 
     }

@@ -27,7 +27,7 @@ class MusicArtist
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $mbid = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $plexId = null;
 
     public function __construct()

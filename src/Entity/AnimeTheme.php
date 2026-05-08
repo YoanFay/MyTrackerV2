@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\AnimeThemeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AnimeThemeRepository::class)]
@@ -16,17 +17,29 @@ class AnimeTheme
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private ?string $nameEng = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nameFra = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $descriptionEng = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $descriptionFra = null;
+
+    #[ORM\Column]
+    private ?int $level = null;
 
     /**
-     * @var Collection<int, Serie>
+     * @var Collection<int, SerieAnimeTheme>
      */
-    #[ORM\ManyToMany(targetEntity: Serie::class, mappedBy: 'animeThemes')]
-    private Collection $series;
+    #[ORM\OneToMany(targetEntity: SerieAnimeTheme::class, mappedBy: 'animeTheme')]
+    private Collection $serieAnimeThemes;
 
     public function __construct()
     {
-        $this->series = new ArrayCollection();
+        $this->serieAnimeThemes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -34,40 +47,91 @@ class AnimeTheme
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getNameEng(): ?string
     {
-        return $this->name;
+        return $this->nameEng;
     }
 
-    public function setName(string $name): static
+    public function setNameEng(string $nameEng): static
     {
-        $this->name = $name;
+        $this->nameEng = $nameEng;
+
+        return $this;
+    }
+
+    public function getNameFra(): ?string
+    {
+        return $this->nameFra;
+    }
+
+    public function setNameFra(?string $nameFra): static
+    {
+        $this->nameFra = $nameFra;
+
+        return $this;
+    }
+
+    public function getDescriptionEng(): ?string
+    {
+        return $this->descriptionEng;
+    }
+
+    public function setDescriptionEng(?string $descriptionEng): static
+    {
+        $this->descriptionEng = $descriptionEng;
+
+        return $this;
+    }
+
+    public function getDescriptionFra(): ?string
+    {
+        return $this->descriptionFra;
+    }
+
+    public function setDescriptionFra(?string $descriptionFra): static
+    {
+        $this->descriptionFra = $descriptionFra;
+
+        return $this;
+    }
+
+    public function getLevel(): ?int
+    {
+        return $this->level;
+    }
+
+    public function setLevel(int $level): static
+    {
+        $this->level = $level;
 
         return $this;
     }
 
     /**
-     * @return Collection<int, Serie>
+     * @return Collection<int, SerieAnimeTheme>
      */
-    public function getSeries(): Collection
+    public function getSerieAnimeThemes(): Collection
     {
-        return $this->series;
+        return $this->serieAnimeThemes;
     }
 
-    public function addSeries(Serie $series): static
+    public function addSerieAnimeTheme(SerieAnimeTheme $serieAnimeTheme): static
     {
-        if (!$this->series->contains($series)) {
-            $this->series->add($series);
-            $series->addAnimeTheme($this);
+        if (!$this->serieAnimeThemes->contains($serieAnimeTheme)) {
+            $this->serieAnimeThemes->add($serieAnimeTheme);
+            $serieAnimeTheme->setAnimeTheme($this);
         }
 
         return $this;
     }
 
-    public function removeSeries(Serie $series): static
+    public function removeSerieAnimeTheme(SerieAnimeTheme $serieAnimeTheme): static
     {
-        if ($this->series->removeElement($series)) {
-            $series->removeAnimeTheme($this);
+        if ($this->serieAnimeThemes->removeElement($serieAnimeTheme)) {
+            // set the owning side to null (unless already changed)
+            if ($serieAnimeTheme->getAnimeTheme() === $this) {
+                $serieAnimeTheme->setAnimeTheme(null);
+            }
         }
 
         return $this;

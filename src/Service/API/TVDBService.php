@@ -15,6 +15,7 @@ use App\Repository\TVDBGenreRepository;
 use App\Repository\TVDBTagRepository;
 use App\Repository\TVDBTagTypeRepository;
 use App\Service\ImageService;
+use App\Service\StringService;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use GuzzleHttp\Client;
@@ -43,6 +44,8 @@ class TVDBService
 
     private ImageService $imageService;
 
+    private StringService $stringService;
+
     private string $tvdbKey;
 
     private array $companyCache = [];
@@ -63,6 +66,7 @@ class TVDBService
         TVDBTagTypeRepository          $TVDBTagTypeRepository,
         TVDBGenreRepository            $TVDBGenreRepository,
         ImageService                   $imageService,
+        StringService                  $stringService,
         string                         $tvdbKey,
     )
     {
@@ -75,11 +79,13 @@ class TVDBService
         $this->TVDBTagTypeRepository = $TVDBTagTypeRepository;
         $this->TVDBGenreRepository = $TVDBGenreRepository;
         $this->imageService = $imageService;
+        $this->stringService = $stringService;
         $this->tvdbKey = $tvdbKey;
     }
 
 
-    public function getSerieIdByEpisodeId($episodeId)
+    public
+    function getSerieIdByEpisodeId($episodeId)
     {
 
         $data = self::getData("/episodes/".$episodeId);
@@ -93,7 +99,8 @@ class TVDBService
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public function getData($url)
+    public
+    function getData($url)
     {
 
         $client = new Client();
@@ -111,6 +118,8 @@ class TVDBService
 
             $data = json_decode($response->getBody(), true);
 
+            dump($data);
+
         } catch (\Exception $e) {
             $data = null;
         }
@@ -122,7 +131,8 @@ class TVDBService
     /**
      * @throws InvalidArgumentException
      */
-    public function getKey()
+    public
+    function getKey()
     {
 
         $cache = new FilesystemAdapter();
@@ -153,7 +163,8 @@ class TVDBService
     }
 
 
-    public function updateSerieInfo(Serie $serie): void
+    public
+    function updateSerieInfo(Serie $serie): void
     {
 
         self::updateSerieName($serie);
@@ -162,13 +173,15 @@ class TVDBService
     }
 
 
-    public function updateSerieName(Serie $serie): void
+    public
+    function updateSerieName(Serie $serie): void
     {
 
         $data = self::getData("/series/".$serie->getTvdbId()."/translations/fra");
 
         if ($data !== null && $data['status'] === "success") {
             $serie->setName($data['data']['name']);
+            $serie->setSlug($this->stringService->slugify($data['data']['name']));
             $serie->setIsVfName(true);
         }
 
@@ -180,7 +193,8 @@ class TVDBService
     }
 
 
-    public function updateArtwork(Serie $serie): void
+    public
+    function updateArtwork(Serie $serie): void
     {
 
         $projectDir = $this->kernel->getProjectDir();
@@ -238,22 +252,44 @@ class TVDBService
     }
 
 
-    public function createEpisode(Episode $episode): void
+    /**
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public
+    function createEpisode(Episode $episode): void
     {
 
         $data = self::getData("/episodes/".$episode->getTvdbId());
 
+        $serie = $episode->getSerie();
+
         if ($data !== null && $data['status'] === "success") {
 
+            if (!$data['data']['name']) {
+                $data = self::getData("/series/".$serie->getTvdbId()."/episodes/default?page=0&season=".$episode->getSeasonNumber()."&episodeNumber=".$episode->getEpisodeNumber());
+
+                if ($data !== null && $data['status'] === "success") {
+                    $episode->setTvdbId($data['data']['episodes'][0]['id']);
+                    $data = self::getData("/episodes/".$episode->getTvdbId());
+
+                }
+            }
+
             $episode->setDuration($data['data']['runtime'] * 60000);
-            $episode->setEpisodeNumber($data['data']['number']);
-            $episode->setSeasonNumber($data['data']['seasonNumber']);
+            if ($data['data']['number']) {
+                $episode->setEpisodeNumber($data['data']['number']);
+            }
+            if ($data['data']['seasonNumber']) {
+                $episode->setSeasonNumber($data['data']['seasonNumber']);
+            }
             $this->updateEpisodeName($episode);
         }
     }
 
 
-    public function updateEpisodeName(Episode $episode): void
+    public
+    function updateEpisodeName(Episode $episode): void
     {
 
         $data = self::getData("/episodes/".$episode->getTvdbId()."/translations/fra");
@@ -318,7 +354,8 @@ class TVDBService
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public function newSerie(Serie $serie): void
+    public
+    function newSerie(Serie $serie): void
     {
 
         dump($serie);
@@ -333,21 +370,29 @@ class TVDBService
 
             $serie->setFirstAired(\DateTime::createFromFormat('Y-m-d', $serieData['firstAired'])->setTime(0, 0) ?? null);
             $serie->setLastAired(\DateTime::createFromFormat('Y-m-d', $serieData['lastAired'])->setTime(0, 0) ?? null);
-            $serie->setNextAired(\DateTime::createFromFormat('Y-m-d', $serieData['nextAired'])->setTime(0, 0) ?? null);
+            if ($serieData['nextAired']) {
+                $serie->setNextAired(\DateTime::createFromFormat('Y-m-d', $serieData['nextAired'])->setTime(0, 0) ?? null);
+            }
             $serie->setStatus($serieData['status']['name']);
 
-            foreach ($serieData['tags'] as $tvdbTag) {
-                self::tvdbTagTreatment($serie, $tvdbTag);
+            if ($serieData['tags']) {
+                foreach ($serieData['tags'] as $tvdbTag) {
+                    self::tvdbTagTreatment($serie, $tvdbTag);
+                }
             }
 
-            foreach ($serieData['genres'] as $tvdbGenre) {
-                self::tvdbGenreTreatment($serie, $tvdbGenre);
+            if ($serieData['genres']) {
+                foreach ($serieData['genres'] as $tvdbGenre) {
+                    self::tvdbGenreTreatment($serie, $tvdbGenre);
+                }
             }
 
-            foreach ($serieData['companies'] as $company) {
+            if ($serieData['companies']) {
+                foreach ($serieData['companies'] as $company) {
 
-                self::companyTreatment($serie, $company);
+                    self::companyTreatment($serie, $company);
 
+                }
             }
 
         }
@@ -355,7 +400,8 @@ class TVDBService
     }
 
 
-    public function tvdbTagTreatment(Serie $serie, $tag): void
+    public
+    function tvdbTagTreatment(Serie $serie, $tag): void
     {
 
         if (isset($this->tagTypeCache[$tag['tagName']])) {
@@ -395,7 +441,8 @@ class TVDBService
     }
 
 
-    public function tvdbGenreTreatment(Serie $serie, $genre): void
+    public
+    function tvdbGenreTreatment(Serie $serie, $genre): void
     {
 
         if (isset($this->genreCache[$genre['name']])) {
@@ -420,7 +467,8 @@ class TVDBService
     }
 
 
-    public function companyTreatment($serie, $company): void
+    public
+    function companyTreatment($serie, $company): void
     {
 
         if (isset($this->companyCache[$company['name']])) {
@@ -477,6 +525,16 @@ class TVDBService
             $this->manager->persist($involved);
         }
 
+    }
+
+
+    public function clearCache(): void
+    {
+
+        $this->companyCache = [];
+        $this->tagCache = [];
+        $this->tagTypeCache = [];
+        $this->genreCache = [];
     }
 
 }

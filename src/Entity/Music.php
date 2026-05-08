@@ -39,7 +39,7 @@ class Music
     #[ORM\ManyToMany(targetEntity: MBIDTag::class, inversedBy: 'music')]
     private Collection $musicTags;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $plexId = null;
 
     public function __construct()

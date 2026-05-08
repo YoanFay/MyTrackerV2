@@ -16,6 +16,26 @@ class MusicRepository extends ServiceEntityRepository
         parent::__construct($registry, Music::class);
     }
 
+
+    /**
+     * @param string|null     $name
+     * @param string|null $mbid
+     *
+     * @return Music[]|null Returns an array of Music objects
+     */
+    public function findByNameOrMBID(?string $name, ?string $mbid)
+    {
+
+        return $this->createQueryBuilder('m')
+            ->where('m.name = :name')
+            ->orWhere('m.mbid = :mbid')
+            ->setParameter('name', $name)
+            ->setParameter('mbid', $mbid)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+    }
+
     //    /**
     //     * @return Music[] Returns an array of Music objects
     //     */

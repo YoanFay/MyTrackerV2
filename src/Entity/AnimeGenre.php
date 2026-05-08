@@ -16,13 +16,16 @@ class AnimeGenre
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private ?string $nameEng = null;
 
     /**
      * @var Collection<int, Serie>
      */
     #[ORM\ManyToMany(targetEntity: Serie::class, mappedBy: 'animeGenres')]
     private Collection $series;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nameFra = null;
 
     public function __construct()
     {
@@ -34,14 +37,14 @@ class AnimeGenre
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getNameEng(): ?string
     {
-        return $this->name;
+        return $this->nameEng;
     }
 
-    public function setName(string $name): static
+    public function setNameEng(string $nameEng): static
     {
-        $this->name = $name;
+        $this->nameEng = $nameEng;
 
         return $this;
     }
@@ -69,6 +72,18 @@ class AnimeGenre
         if ($this->series->removeElement($series)) {
             $series->removeAnimeGenre($this);
         }
+
+        return $this;
+    }
+
+    public function getNameFra(): ?string
+    {
+        return $this->nameFra;
+    }
+
+    public function setNameFra(?string $nameFra): static
+    {
+        $this->nameFra = $nameFra;
 
         return $this;
     }

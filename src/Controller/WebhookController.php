@@ -3,8 +3,8 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
-use App\Service\WebHook\FilmWebhookService;
-use App\Service\WebHook\MusiqueWebhookService;
+use App\Service\WebHook\MovieWebhookService;
+use App\Service\WebHook\MusicWebhookService;
 use App\Service\WebHook\SerieWebhookService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,10 +15,10 @@ final class WebhookController extends AbstractController
 {
     #[Route('/webhook', name: 'app_webhook')]
     public function index(
-        SerieWebhookService   $serieWebhookService,
-        MusiqueWebhookService $musiqueWebhookService,
-        FilmWebhookService    $filmWebhookService,
-        UserRepository        $userRepository,
+        SerieWebhookService $serieWebhookService,
+        MusicWebhookService $musiqueWebhookService,
+        MovieWebhookService $filmWebhookService,
+        UserRepository      $userRepository,
     ): Response
     {
 

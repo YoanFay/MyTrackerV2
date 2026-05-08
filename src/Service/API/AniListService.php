@@ -2,11 +2,17 @@
 
 namespace App\Service\API;
 
+use App\Entity\AnimeGenre;
+use App\Entity\AnimeTheme;
 use App\Entity\InvolvedSerieCompany;
 use App\Entity\Serie;
+use App\Entity\SerieAnimeTheme;
 use App\Entity\SerieCompany;
+use App\Repository\AnimeGenreRepository;
+use App\Repository\AnimeThemeRepository;
 use App\Repository\InvolvedSerieCompanyRepository;
 use App\Repository\SerieCompanyRepository;
+use App\Service\StringService;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
@@ -19,22 +25,38 @@ class AniListService
 
     private SerieCompanyRepository $serieCompanyRepository;
 
+    private AnimeGenreRepository $animeGenreRepository;
+
+    private AnimeThemeRepository $animeThemeRepository;
+
     private InvolvedSerieCompanyRepository $involvedSerieCompanyRepository;
 
     private ObjectManager $manager;
 
+    private StringService $stringService;
+
     private array $companyCache = [];
+
+    private array $animeGenreCache = [];
+
+    private array $animeThemeCache = [];
 
 
     public function __construct(
         SerieCompanyRepository         $serieCompanyRepository,
+        AnimeGenreRepository           $animeGenreRepository,
+        AnimeThemeRepository           $animeThemeRepository,
         InvolvedSerieCompanyRepository $involvedSerieCompanyRepository,
-        ManagerRegistry     $managerRegistry,
+        StringService                  $stringService,
+        ManagerRegistry                $managerRegistry,
     )
     {
 
         $this->serieCompanyRepository = $serieCompanyRepository;
+        $this->animeGenreRepository = $animeGenreRepository;
+        $this->animeThemeRepository = $animeThemeRepository;
         $this->involvedSerieCompanyRepository = $involvedSerieCompanyRepository;
+        $this->stringService = $stringService;
         $this->manager = $managerRegistry->getManager();
     }
 
@@ -49,7 +71,7 @@ class AniListService
     #[NoReturn] public function newAnime(Serie $anime, int $amount = 0, int $totalScore = 0): void
     {
 
-        $query = 'query ($search: String) { Media (search: $search, type: ANIME) { title{english}, status, relations{ edges{relationType}, nodes{title{english, romaji}} }, stats { scoreDistribution {score, amount}}, endDate{day, month, year}, startDate{day, month, year}, nextAiringEpisode{airingAt}, studios{edges{isMain},nodes{name}} }}';
+        $query = 'query ($search: String) { Media (search: $search, type: ANIME) { title{english}, status, relations{ edges{relationType}, nodes{title{english, romaji}} }, stats { scoreDistribution {score, amount}}, endDate{day, month, year}, startDate{day, month, year}, nextAiringEpisode{airingAt}, studios{edges{isMain},nodes{name}}, genres, tags{ name,rank, description, isMediaSpoiler,isGeneralSpoiler } }}';
 
         $searchName = $anime->getNameEng();
 
@@ -63,7 +85,11 @@ class AniListService
 
         $data = $this->request($query, $variables);
 
-        dump($data);
+        if (!$anime->getName()) {
+            $anime->setName($data['title']['english']);
+            $anime->setSlug($this->stringService->slugify($anime->getName()));
+            $anime->setIsVfName(false);
+        }
 
         $startDate = $this->formattedDate($data['startDate']);
 
@@ -79,6 +105,16 @@ class AniListService
 
             $this->studioTreatment($anime, $studio['name'], $data['studios']['edges'][$studioKey]['isMain']);
 
+        }
+
+        foreach ($data['genres'] as $genre){
+            $this->genreTreatment($anime, $genre);
+        }
+
+        foreach ($data['tags'] as $theme){
+            if($theme['rank'] >= 75){
+                $this->themeTreatment($anime, $theme);
+            }
         }
 
         foreach ($data['stats']['scoreDistribution'] as $score) {
@@ -97,7 +133,7 @@ class AniListService
             array_column($data['relations']["edges"], 'relationType')
         );
 
-        if ($keySequel !== false) {
+        if ($keySequel !== false && $data['relations']["nodes"][$keySequel]["title"]['english'] != null) {
             $sequelName = $data['relations']["nodes"][$keySequel]["title"]['english'];
 
             $anime->setLastSeasonName($sequelName);
@@ -158,7 +194,9 @@ class AniListService
                 $error++;
                 dump($e->getMessage());
                 dump("Erreur N°".$error." sur ".$errorMax);
-                sleep(5 * $error);
+                if ($errorMax !== $error) {
+                    sleep(10 * $error);
+                }
             }
         } while ($error < $errorMax);
 
@@ -167,10 +205,14 @@ class AniListService
     }
 
 
-    public function formattedDate($arrayDate): DateTime|bool
+    public function formattedDate($arrayDate): DateTime|null
     {
 
-        return DateTime::createFromFormat('Y-m-d', $arrayDate['year']."-".$arrayDate['month']."-".$arrayDate['day'])->setTime(0, 0);
+        if ($arrayDate['year'] && $arrayDate['month'] && $arrayDate['day']) {
+            return DateTime::createFromFormat('Y-m-d', $arrayDate['year']."-".$arrayDate['month']."-".$arrayDate['day'])->setTime(0, 0);
+        }
+
+        return null;
 
     }
 
@@ -214,6 +256,75 @@ class AniListService
 
         $this->manager->persist($involved);
 
+    }
+
+
+    public function genreTreatment(Serie $anime, $genreName): void
+    {
+
+        if (isset($this->animeGenreCache[$genreName])) {
+            $animeGenre = $this->animeGenreCache[$genreName];
+        } else {
+            $animeGenre = $this->animeGenreRepository->findOneBy(['nameEng' => $genreName]);
+
+            if (!$animeGenre) {
+                $animeGenre = new AnimeGenre();
+                $animeGenre->setNameEng($genreName);
+
+                $this->manager->persist($animeGenre);
+            }
+
+            $this->animeGenreCache[$genreName] = $animeGenre;
+        }
+
+        $anime->addAnimeGenre($animeGenre);
+
+    }
+
+
+    public function themeTreatment(Serie $anime, $dataTheme): void
+    {
+
+        $themeName = $dataTheme['name'];
+        $level = $dataTheme['rank'];
+        $description = $dataTheme['description'];
+
+        if (isset($this->animeThemeCache[$themeName])) {
+            $animeTheme = $this->animeThemeCache[$themeName];
+        } else {
+            $animeTheme = $this->animeThemeRepository->findOneBy(['nameEng' => $themeName]);
+
+            if (!$animeTheme) {
+                $animeTheme = new AnimeTheme();
+                $animeTheme->setNameEng($themeName);
+                $animeTheme->setLevel($level);
+                $animeTheme->setDescriptionEng($description);
+
+                $this->manager->persist($animeTheme);
+            }
+
+            $this->animeThemeCache[$themeName] = $animeTheme;
+        }
+
+        $serieAnimeTheme = new SerieAnimeTheme();
+        $serieAnimeTheme->setSerie($anime);
+        $serieAnimeTheme->setAnimeTheme($animeTheme);
+
+        if($dataTheme['isMediaSpoiler'] || $dataTheme['isGeneralSpoiler']){
+            $serieAnimeTheme->setIsSpoiler(true);
+        }
+
+        $this->manager->persist($serieAnimeTheme);
+
+    }
+
+
+    public function clearCache(): void
+    {
+
+        $this->companyCache = [];
+        $this->animeGenreCache = [];
+        $this->animeThemeCache = [];
     }
 
 }

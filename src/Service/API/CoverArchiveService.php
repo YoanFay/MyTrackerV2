@@ -9,7 +9,7 @@ class CoverArchiveService
 {
 
 
-    public function request($mbid): mixed
+    public function request($mbid, $type = "release"): mixed
     {
 
         dump("REQUEST CALLED");
@@ -18,19 +18,23 @@ class CoverArchiveService
             'timeout' => 10
         ]);
 
-        $errorMax = 5;
+        $errorMax = 3;
         $error = 0;
 
         do {
             try {
-                $response = $http->get("https://coverartarchive.org/release/".$mbid);
+                $response = $http->get("https://coverartarchive.org/".$type."/".$mbid);
 
                 return json_decode($response->getBody(), true);
             } catch (GuzzleException $e) {
-                $error++;
-                dump($e->getMessage());
-                dump("Erreur N°".$error." sur ".$errorMax);
-                sleep(5 * $error);
+                if($e->getCode() !== 404){
+                    $error++;
+                    dump($e->getMessage());
+                    dump("Erreur N°".$error." sur ".$errorMax);
+                    sleep(5 * $error);
+                }else{
+                    $error = 100;
+                }
             }
         } while ($error < $errorMax);
 

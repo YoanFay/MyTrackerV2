@@ -30,6 +30,8 @@ class MusicBrainzService
     public function addMusicInfo(MusicArtist $artist, Music $music, string $albumName): void
     {
 
+        $data = null;
+
         if ($artist->getName() !== "Various Artists") {
 
             if (!$artist->getMbid()) {
@@ -39,13 +41,19 @@ class MusicBrainzService
 
                     $artist->setName($dataArtist['name']);
                     $artist->setMbid($dataArtist['id']);
-                }
-            }
 
-            $data = self::request('/release', 'arid:'.$artist->getMbid()." AND release:".$music->getName());
+                    $data = self::request('/release', 'arid:'.$artist->getMbid()." AND release:".$music->getName());
+                }
+            }else{
+                $data = self::request('/release', 'arid:'.$artist->getMbid()." AND release:".$music->getName());
+            }
 
         } else {
             $data = self::request('/release', 'release:'.$albumName);
+        }
+
+        if (!$data){
+            return;
         }
 
         $music->setMusicArtist($artist);
@@ -63,7 +71,7 @@ class MusicBrainzService
                 continue;
             }
 
-            if ($release['status'] != "Official" && $release['release-group']) {
+            if (isset($release['status']) && $release['status'] != "Official" && $release['release-group']) {
                 $dataRelease = self::request('/release', 'rgid:'.$release['release-group']['id']." AND status:Official and packaging:none");
 
                 if ($dataRelease['releases'][0]) {
@@ -74,9 +82,14 @@ class MusicBrainzService
             if ($release) {
                 $music->setMbid($release['id']);
 
-                $music->setDuration(self::getDuration($music->getMbid()));
+                $music->setDuration(self::getDuration($music->getMbid(), $music->getName()));
 
                 if ($dataImage = $this->coverArchiveService->request($music->getMbid())) {
+                    if ($dataImage['images']) {
+
+                        $this->imageService->addImage("musique/cover/", $music->getMbid(), $dataImage['images'][0]['image']);
+                    }
+                }elseif ($release['release-group'] && $dataImage = $this->coverArchiveService->request($release['release-group']['id'], 'release-group')) {
                     if ($dataImage['images']) {
 
                         $this->imageService->addImage("musique/cover/", $music->getMbid(), $dataImage['images'][0]['image']);
@@ -148,26 +161,21 @@ class MusicBrainzService
     }
 
 
-    public function getDuration(string $releaseId): mixed
+    public function getDuration(string $releaseId, string $musicName): mixed
     {
 
         $data = self::request('/recording', 'reid:'.$releaseId);
 
-        if ($data['recordings'][0] && $data['recordings'][0]['length']) {
-            return $data['recordings'][0]['length'];
-        }
+        foreach ($data['recordings'] as $recording){
 
-        return null;
-    }
+            if(!isset($recording['length'])){
+                continue;
+            }
 
+            if ($recording['title'] == $musicName) {
+                return $recording['length'];
+            }
 
-    public function getCover(string $releaseId): mixed
-    {
-
-        $data = self::request('/recording', 'reid:'.$releaseId);
-
-        if ($data['recordings'][0] && $data['recordings'][0]['length']) {
-            return $data['recordings'][0]['length'];
         }
 
         return null;

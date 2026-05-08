@@ -16,7 +16,7 @@ use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 
-class MusiqueWebhookService
+class MusicWebhookService
 {
 
     private MusicBrainzService $musicBrainzService;
@@ -58,7 +58,7 @@ class MusiqueWebhookService
 
         $music = $this->musicRepository->findOneBy(['plexId' => $plexId]);
 
-        if(!$music) {
+        if (!$music) {
 
             $music = new Music();
             $music->setName($data['title']);
@@ -68,7 +68,7 @@ class MusiqueWebhookService
 
             $artist = $this->musicArtistRepository->findOneBy(['plexId' => $artistPlexId]);
 
-            if(!$artist){
+            if (!$artist) {
                 $artist = new MusicArtist();
                 $artist->setName($data['grandparentTitle']);
                 $artist->setPlexId($artistPlexId);
@@ -113,12 +113,118 @@ class MusiqueWebhookService
             }
         }
 
+        $musicListen = new MusicListen();
+        $musicListen->setUser($user);
+        $musicListen->setMusic($music);
+        $musicListen->setListenAt(new DateTime());
+
+        $this->manager->persist($musicListen);
+        $this->manager->flush();
+
+    }
+
+
+    public function importMusic($data, $user): void
+    {
+
+        $name = $data[0];
+        $artistName = $data[1];
+        $mbid = $data[2];
+        $show = $data[13];
+
+        $dataMusicTags = [
+            [
+                'musicTagPlexId' => $data[4],
+                'musicTag' => $data[3],
+            ],
+            [
+                'musicTagPlexId' => $data[6],
+                'musicTag' => $data[5],
+            ],
+            [
+                'musicTagPlexId' => $data[8],
+                'musicTag' => $data[7],
+            ],
+            [
+                'musicTagPlexId' => $data[10],
+                'musicTag' => $data[9],
+            ],
+            [
+                'musicTagPlexId' => $data[12],
+                'musicTag' => $data[11],
+            ],
+        ];
+
+        $music = $this->musicRepository->findByNameOrMBID($name, $mbid);
+
+        if (!$music) {
+
+            $music = new Music();
+            $music->setName($name);
+
+            $artist = $this->musicArtistRepository->findOneBy(['name' => $artistName]);
+
+            if (!$artist) {
+                $artist = new MusicArtist();
+                $artist->setName($artistName);
+            }
+
+            $musicTagsTest = array_column($dataMusicTags, 'musicTag');
+
+            if(in_array('Anime', $musicTagsTest)){
+                $this->musicBrainzService->addMusicInfo($artist, $music, $name);
+            }
+
+            $this->manager->persist($artist);
+            $this->manager->persist($music);
+
+            foreach ($dataMusicTags as $dataMusicTag) {
+
+                if ($dataMusicTag['musicTagPlexId']) {
+
+                    $mbidTag = $this->MBIDTagRepository->findOneBy(['plexId' => $dataMusicTag['musicTagPlexId']]);
+
+                    if (!$mbidTag) {
+
+                        if (is_numeric($dataMusicTag['musicTag'])) {
+                            $musicTagType = "Année";
+                        } else if (in_array($dataMusicTag['musicTag'], ['Printemps', 'Été', 'Automne', 'Hiver'])) {
+                            $musicTagType = "Saison";
+                        } else if (in_array($dataMusicTag['musicTag'], ['Anime', 'Film', 'Série', 'Jeux'])) {
+                            $musicTagType = "Type";
+                        } else if (in_array($dataMusicTag['musicTag'], ['Opening', 'Insert', 'Ending', 'OST'])) {
+                            $musicTagType = "AnimeTag";
+                        } else {
+                            $musicTagType = "Origin";
+                        }
+
+                        /** @var MBIDTagType $mbidTagType */
+                        $mbidTagType = $this->MBIDTagTypeRepository->findOneBy(['name' => $musicTagType]);
+
+                        $mbidTag = new MBIDTag();
+                        $mbidTag->setPlexId($dataMusicTag['musicTagPlexId']);
+                        $mbidTag->setMbidTagType($mbidTagType);
+                        $mbidTag->setName($dataMusicTag['musicTag']);
+                        $this->manager->persist($mbidTag);
+
+                    }
+
+                    $music->addMusicTag($mbidTag);
+
+                    $this->manager->persist($artist);
+                    $this->manager->persist($music);
+
+                }
+
+            }
+        }
+
         dump($music);
 
         $musicListen = new MusicListen();
         $musicListen->setUser($user);
         $musicListen->setMusic($music);
-        $musicListen->setListenAt(new DateTime());
+        $musicListen->setListenAt(DateTime::createFromFormat('Y-m-d H-i-s', $show));
 
         $this->manager->persist($musicListen);
         $this->manager->flush();

@@ -59,3 +59,5 @@ docker-compose.yml
 /.idea/
 /public/webhook/
 /public/image/
+/public/error/
+/public/import/
