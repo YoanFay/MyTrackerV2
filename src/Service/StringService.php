@@ -4,7 +4,13 @@ namespace App\Service;
 
 class StringService
 {
-    function slugify($string, $delimiter = '-'): string
+    /**
+     * @param string $string
+     * @param string $delimiter
+     *
+     * @return string
+     */
+    function slugify(string $string, string $delimiter = '-'): string
     {
         $oldLocale = setlocale(LC_ALL, '0');
         setlocale(LC_ALL, 'en_US.UTF-8');
