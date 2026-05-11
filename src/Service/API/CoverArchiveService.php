@@ -9,7 +9,13 @@ class CoverArchiveService
 {
 
 
-    public function request($mbid, $type = "release"): mixed
+    /**
+     * @param string $mbid
+     * @param string $type
+     *
+     * @return mixed
+     */
+    public function request(string $mbid, string $type = "release"): mixed
     {
 
         dump("REQUEST CALLED");

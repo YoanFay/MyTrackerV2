@@ -35,10 +35,15 @@ class AniListService
 
     private StringService $stringService;
 
+    /** @var array<string, SerieCompany> */
     private array $companyCache = [];
 
+
+    /** @var array<string, AnimeGenre> */
     private array $animeGenreCache = [];
 
+
+    /** @var array<string, AnimeTheme> */
     private array $animeThemeCache = [];
 
 
@@ -68,7 +73,7 @@ class AniListService
      *
      * @return void
      */
-    #[NoReturn] public function newAnime(Serie $anime, int $amount = 0, int $totalScore = 0): void
+    public function newAnime(Serie $anime, int $amount = 0, int $totalScore = 0): void
     {
 
         $query = 'query ($search: String) { Media (search: $search, type: ANIME) { title{english}, status, relations{ edges{relationType}, nodes{title{english, romaji}} }, stats { scoreDistribution {score, amount}}, endDate{day, month, year}, startDate{day, month, year}, nextAiringEpisode{airingAt}, studios{edges{isMain},nodes{name}}, genres, tags{ name,rank, description, isMediaSpoiler,isGeneralSpoiler } }}';
@@ -107,12 +112,12 @@ class AniListService
 
         }
 
-        foreach ($data['genres'] as $genre){
+        foreach ($data['genres'] as $genre) {
             $this->genreTreatment($anime, $genre);
         }
 
-        foreach ($data['tags'] as $theme){
-            if($theme['rank'] >= 75){
+        foreach ($data['tags'] as $theme) {
+            if ($theme['rank'] >= 75) {
                 $this->themeTreatment($anime, $theme);
             }
         }
@@ -124,7 +129,7 @@ class AniListService
 
         }
 
-        $newScore = round($totalScore / $amount, 0, PHP_ROUND_HALF_DOWN);
+        $newScore = (int) round($totalScore / $amount, 0, PHP_ROUND_HALF_DOWN);
 
         $anime->setScore($newScore);
 
@@ -205,7 +210,12 @@ class AniListService
     }
 
 
-    public function formattedDate($arrayDate): DateTime|null
+    /**
+     * @param array<string, int> $arrayDate
+     *
+     * @return DateTime|null
+     */
+    public function formattedDate(array $arrayDate): DateTime|null
     {
 
         if ($arrayDate['year'] && $arrayDate['month'] && $arrayDate['day']) {
@@ -217,7 +227,14 @@ class AniListService
     }
 
 
-    public function studioTreatment($anime, $studioName, $isMain): void
+    /**
+     * @param Serie  $anime
+     * @param string $studioName
+     * @param bool   $isMain
+     *
+     * @return void
+     */
+    public function studioTreatment(Serie $anime, string $studioName, bool $isMain): void
     {
 
         if (isset($this->companyCache[$studioName])) {
@@ -259,7 +276,13 @@ class AniListService
     }
 
 
-    public function genreTreatment(Serie $anime, $genreName): void
+    /**
+     * @param Serie  $anime
+     * @param string $genreName
+     *
+     * @return void
+     */
+    public function genreTreatment(Serie $anime, string $genreName): void
     {
 
         if (isset($this->animeGenreCache[$genreName])) {
@@ -282,7 +305,13 @@ class AniListService
     }
 
 
-    public function themeTreatment(Serie $anime, $dataTheme): void
+    /**
+     * @param Serie $anime
+     * @param array<string, mixed> $dataTheme
+     *
+     * @return void
+     */
+    public function themeTreatment(Serie $anime, array $dataTheme): void
     {
 
         $themeName = $dataTheme['name'];
@@ -310,7 +339,7 @@ class AniListService
         $serieAnimeTheme->setSerie($anime);
         $serieAnimeTheme->setAnimeTheme($animeTheme);
 
-        if($dataTheme['isMediaSpoiler'] || $dataTheme['isGeneralSpoiler']){
+        if ($dataTheme['isMediaSpoiler'] || $dataTheme['isGeneralSpoiler']) {
             $serieAnimeTheme->setIsSpoiler(true);
         }
 

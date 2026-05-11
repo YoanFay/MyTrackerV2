@@ -27,6 +27,13 @@ class MusicBrainzService
     }
 
 
+    /**
+     * @param MusicArtist $artist
+     * @param Music       $music
+     * @param string      $albumName
+     *
+     * @return void
+     */
     public function addMusicInfo(MusicArtist $artist, Music $music, string $albumName): void
     {
 
@@ -102,7 +109,12 @@ class MusicBrainzService
     }
 
 
-    public function searchArtist(string $name)
+    /**
+     * @param string $name
+     *
+     * @return false|mixed
+     */
+    public function searchArtist(string $name): mixed
     {
 
         $data = self::request('/artist', 'name:'.$name);
@@ -129,6 +141,12 @@ class MusicBrainzService
     }
 
 
+    /**
+     * @param string $route
+     * @param string $query
+     *
+     * @return mixed
+     */
     public function request(string $route, string $query): mixed
     {
 
@@ -161,6 +179,12 @@ class MusicBrainzService
     }
 
 
+    /**
+     * @param string $releaseId
+     * @param string $musicName
+     *
+     * @return mixed
+     */
     public function getDuration(string $releaseId, string $musicName): mixed
     {
 

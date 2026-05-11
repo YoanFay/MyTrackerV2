@@ -7,6 +7,7 @@ use App\Entity\MBIDTagType;
 use App\Entity\Music;
 use App\Entity\MusicArtist;
 use App\Entity\MusicListen;
+use App\Entity\User;
 use App\Repository\MBIDTagRepository;
 use App\Repository\MBIDTagTypeRepository;
 use App\Repository\MusicArtistRepository;
@@ -51,7 +52,13 @@ class MusicWebhookService
     }
 
 
-    public function addMusic($data, $user): void
+    /**
+     * @param array<string, mixed> $data
+     * @param User  $user
+     *
+     * @return void
+     */
+    public function addMusic(array $data, User $user): void
     {
 
         $plexId = str_replace('plex://track/', '', $data['guid']);
@@ -124,7 +131,13 @@ class MusicWebhookService
     }
 
 
-    public function importMusic($data, $user): void
+    /**
+     * @param array<int, mixed> $data
+     * @param User  $user
+     *
+     * @return void
+     */
+    public function importMusic(array $data, User $user): void
     {
 
         $name = $data[0];
@@ -218,8 +231,6 @@ class MusicWebhookService
 
             }
         }
-
-        dump($music);
 
         $musicListen = new MusicListen();
         $musicListen->setUser($user);

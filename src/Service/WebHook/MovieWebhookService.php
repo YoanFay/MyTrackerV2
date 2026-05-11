@@ -4,6 +4,7 @@ namespace App\Service\WebHook;
 
 use App\Entity\Movie;
 use App\Entity\MovieShow;
+use App\Entity\User;
 use App\Repository\MovieRepository;
 use App\Service\API\TMDBService;
 use DateTime;
@@ -38,10 +39,13 @@ class MovieWebhookService
 
 
     /**
+     * @param array<string, mixed> $data
+     * @param User  $user
+     *
+     * @return void
      * @throws GuzzleException
-     * @throws InvalidArgumentException
      */
-    public function addMovie($data, $user): void
+    public function addMovie(array $data, User $user): void
     {
 
         $plexId = str_replace("plex://movie/", "", $data['guid']);
@@ -92,11 +96,13 @@ class MovieWebhookService
 
 
     /**
+     * @param array<int, mixed> $data
+     * @param User  $user
+     *
+     * @return void
      * @throws GuzzleException
-     * @throws InvalidArgumentException
-     * @throws Exception
      */
-    public function importMovie($data, $user): void
+    public function importMovie(array $data, User $user): void
     {
 
         $plexId = $data[1];

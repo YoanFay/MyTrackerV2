@@ -27,6 +27,7 @@ class TMDBService
 
     private TMDBGenreRepository $TMDBGenreRepository;
 
+    /** @var array<string, TMDBGenre> $genreCache */
     private array $genreCache = [];
 
 
@@ -49,8 +50,10 @@ class TMDBService
 
 
     /**
+     * @param Movie $movie
+     *
+     * @return void
      * @throws GuzzleException
-     * @throws InvalidArgumentException
      */
     public function updateMovieInfo(Movie $movie): void
     {
@@ -65,7 +68,7 @@ class TMDBService
             $movie->setUpdated(true);
 
             foreach ($data['genres'] as $genre) {
-                self::genreTreatment($movie, $genre);
+                self::genreTreatment($movie, $genre['name']);
             }
 
             self::updateArtwork($movie, $data['poster_path']);
@@ -75,10 +78,12 @@ class TMDBService
 
 
     /**
+     * @param int $id
+     *
+     * @return mixed|null
      * @throws GuzzleException
-     * @throws InvalidArgumentException
      */
-    public function getData($id)
+    public function getData(int $id): mixed
     {
 
         $client = new Client();
@@ -104,35 +109,47 @@ class TMDBService
     }
 
 
-    public function updateArtwork(Movie $movie, $path): void
+    /**
+     * @param Movie  $movie
+     * @param string $genre
+     *
+     * @return void
+     */
+    public function genreTreatment(Movie $movie, string $genre): void
     {
 
-        $this->imageService->addImage("movie/poster/", $movie->getSlug(), "https://image.tmdb.org/t/p/w500".$path);
-
-    }
-
-
-    public function genreTreatment(Movie $movie, $genre): void
-    {
-
-        if (isset($this->genreCache[$genre['name']])) {
-            $tmdbGenre = $this->genreCache[$genre['name']];
+        if (isset($this->genreCache[$genre])) {
+            $tmdbGenre = $this->genreCache[$genre];
         } else {
-            $tmdbGenre = $this->TMDBGenreRepository->findOneBy(['nameFra' => $genre['name']]);
+            $tmdbGenre = $this->TMDBGenreRepository->findOneBy(['nameFra' => $genre]);
 
             if (!$tmdbGenre) {
                 $tmdbGenre = new TMDBGenre();
-                $tmdbGenre->setNameFra($genre['name']);
+                $tmdbGenre->setNameFra($genre);
                 $this->manager->persist($tmdbGenre);
             }
 
-            $this->genreCache[$genre['name']] = $tmdbGenre;
+            $this->genreCache[$genre] = $tmdbGenre;
         }
 
         if (!$tmdbGenre->hasMovie($movie)) {
             $this->manager->persist($tmdbGenre);
             $movie->addTmdbGenre($tmdbGenre);
         }
+
+    }
+
+
+    /**
+     * @param Movie  $movie
+     * @param string $path
+     *
+     * @return void
+     */
+    public function updateArtwork(Movie $movie, string $path): void
+    {
+
+        $this->imageService->addImage("movie/poster/", $movie->getSlug(), "https://image.tmdb.org/t/p/w500".$path);
 
     }
 

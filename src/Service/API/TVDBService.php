@@ -16,6 +16,7 @@ use App\Repository\TVDBTagRepository;
 use App\Repository\TVDBTagTypeRepository;
 use App\Service\ImageService;
 use App\Service\StringService;
+use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use GuzzleHttp\Client;
@@ -48,12 +49,16 @@ class TVDBService
 
     private string $tvdbKey;
 
+    /** @var array<string, SerieCompany> $companyCache */
     private array $companyCache = [];
 
+    /** @var array<string, TVDBTag> $tagCache */
     private array $tagCache = [];
 
+    /** @var array<string, TVDBTagType> $tagTypeCache */
     private array $tagTypeCache = [];
 
+    /** @var array<string, TVDBGenre> $genreCache */
     private array $genreCache = [];
 
 
@@ -84,8 +89,14 @@ class TVDBService
     }
 
 
-    public
-    function getSerieIdByEpisodeId($episodeId)
+    /**
+     * @param int $episodeId
+     *
+     * @return mixed
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getSerieIdByEpisodeId(int $episodeId): mixed
     {
 
         $data = self::getData("/episodes/".$episodeId);
@@ -96,11 +107,13 @@ class TVDBService
 
 
     /**
+     * @param string $url
+     *
+     * @return mixed|null
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public
-    function getData($url)
+    public function getData(string $url)
     {
 
         $client = new Client();
@@ -129,10 +142,10 @@ class TVDBService
 
 
     /**
+     * @return mixed
      * @throws InvalidArgumentException
      */
-    public
-    function getKey()
+    public function getKey(): mixed
     {
 
         $cache = new FilesystemAdapter();
@@ -163,8 +176,14 @@ class TVDBService
     }
 
 
-    public
-    function updateSerieInfo(Serie $serie): void
+    /**
+     * @param Serie $serie
+     *
+     * @return void
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function updateSerieInfo(Serie $serie): void
     {
 
         self::updateSerieName($serie);
@@ -173,8 +192,14 @@ class TVDBService
     }
 
 
-    public
-    function updateSerieName(Serie $serie): void
+    /**
+     * @param Serie $serie
+     *
+     * @return void
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function updateSerieName(Serie $serie): void
     {
 
         $data = self::getData("/series/".$serie->getTvdbId()."/translations/fra");
@@ -193,8 +218,14 @@ class TVDBService
     }
 
 
-    public
-    function updateArtwork(Serie $serie): void
+    /**
+     * @param Serie $serie
+     *
+     * @return void
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function updateArtwork(Serie $serie): void
     {
 
         $projectDir = $this->kernel->getProjectDir();
@@ -253,11 +284,13 @@ class TVDBService
 
 
     /**
+     * @param Episode $episode
+     *
+     * @return void
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public
-    function createEpisode(Episode $episode): void
+    public function createEpisode(Episode $episode): void
     {
 
         $data = self::getData("/episodes/".$episode->getTvdbId());
@@ -288,8 +321,14 @@ class TVDBService
     }
 
 
-    public
-    function updateEpisodeName(Episode $episode): void
+    /**
+     * @param Episode $episode
+     *
+     * @return void
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function updateEpisodeName(Episode $episode): void
     {
 
         $data = self::getData("/episodes/".$episode->getTvdbId()."/translations/fra");
@@ -301,78 +340,26 @@ class TVDBService
     }
 
 
-    /*public function createCompany($id): ?Company
-    {
-
-        $data = self::getData("/companies/".$id);
-
-        if ($data !== null && $data['status'] === "success") {
-
-            $data = $data['data'];
-
-            $company = new Company();
-
-            $company->setTvdbId($id);
-            $company->setName($data['name']);
-            $company->setType($data['companyType']['companyTypeName']);
-            $company->setCountry($data['country']);
-
-            if (isset($data['activeDate'])) {
-
-                $startedDate = DateTime::createFromFormat('Y-m-d', $data['activeDate']);
-
-                if ($startedDate) {
-                    $company->setStartedAt($startedDate);
-                }
-            }
-
-            /*if($data['parentCompany']['id']){
-
-                $searchCompany = $this->companyRepository->findOneBy(['tvdbId' => $data['parentCompany']['id']]);
-
-                if(!$searchCompany){
-                    $company->setParent(self::createCompany($data['parentCompany']['id']));
-                }else{
-                    $company->setParent($searchCompany);
-                }
-
-            }//*
-
-            $this->manager->persist($company);
-            $this->manager->flush();
-
-            return $company;
-
-        }
-
-        return null;
-
-    }*/
-
-
     /**
+     * @param Serie $serie
+     *
+     * @return void
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public
-    function newSerie(Serie $serie): void
+    public function newSerie(Serie $serie): void
     {
 
-        dump($serie);
-
         $serieData = self::getData('/series/'.$serie->getTvdbId()."/extended");
-
-        dump($serieData);
 
         if ($serieData['status'] === "success") {
 
             $serieData = $serieData['data'];
 
-            $serie->setFirstAired(\DateTime::createFromFormat('Y-m-d', $serieData['firstAired'])->setTime(0, 0) ?? null);
-            $serie->setLastAired(\DateTime::createFromFormat('Y-m-d', $serieData['lastAired'])->setTime(0, 0) ?? null);
-            if ($serieData['nextAired']) {
-                $serie->setNextAired(\DateTime::createFromFormat('Y-m-d', $serieData['nextAired'])->setTime(0, 0) ?? null);
-            }
+            $serie->setFirstAired($this->createDateFromString($serieData['firstAired']));
+            $serie->setLastAired($this->createDateFromString($serieData['lastAired']));
+            $serie->setNextAired($this->createDateFromString($serieData['nextAired']));
+
             $serie->setStatus($serieData['status']['name']);
 
             if ($serieData['tags']) {
@@ -383,7 +370,7 @@ class TVDBService
 
             if ($serieData['genres']) {
                 foreach ($serieData['genres'] as $tvdbGenre) {
-                    self::tvdbGenreTreatment($serie, $tvdbGenre);
+                    self::tvdbGenreTreatment($serie, $tvdbGenre['name']);
                 }
             }
 
@@ -400,8 +387,31 @@ class TVDBService
     }
 
 
-    public
-    function tvdbTagTreatment(Serie $serie, $tag): void
+    /**
+     * @param string|null $date
+     *
+     * @return DateTime|null
+     */
+    private function createDateFromString(?string $date): ?DateTime
+    {
+
+        if (!$date) {
+            return null;
+        }
+        $result = DateTime::createFromFormat('Y-m-d', $date);
+        return $result !== false ?
+            $result->setTime(0, 0) :
+            null;
+    }
+
+
+    /**
+     * @param Serie                $serie
+     * @param array<string, mixed> $tag
+     *
+     * @return void
+     */
+    public function tvdbTagTreatment(Serie $serie, array $tag): void
     {
 
         if (isset($this->tagTypeCache[$tag['tagName']])) {
@@ -441,22 +451,27 @@ class TVDBService
     }
 
 
-    public
-    function tvdbGenreTreatment(Serie $serie, $genre): void
+    /**
+     * @param Serie  $serie
+     * @param string $genre
+     *
+     * @return void
+     */
+    public function tvdbGenreTreatment(Serie $serie, string $genre): void
     {
 
-        if (isset($this->genreCache[$genre['name']])) {
-            $tvdbGenre = $this->genreCache[$genre['name']];
+        if (isset($this->genreCache[$genre])) {
+            $tvdbGenre = $this->genreCache[$genre];
         } else {
-            $tvdbGenre = $this->TVDBGenreRepository->findOneBy(['nameEng' => $genre['name']]);
+            $tvdbGenre = $this->TVDBGenreRepository->findOneBy(['nameEng' => $genre]);
 
             if (!$tvdbGenre) {
                 $tvdbGenre = new TVDBGenre();
-                $tvdbGenre->setNameEng($genre['name']);
+                $tvdbGenre->setNameEng($genre);
                 $this->manager->persist($tvdbGenre);
             }
 
-            $this->genreCache[$genre['name']] = $tvdbGenre;
+            $this->genreCache[$genre] = $tvdbGenre;
         }
 
         if (!$tvdbGenre->hasSerie($serie)) {
@@ -467,8 +482,13 @@ class TVDBService
     }
 
 
-    public
-    function companyTreatment($serie, $company): void
+    /**
+     * @param Serie                $serie
+     * @param array<string, mixed> $company
+     *
+     * @return void
+     */
+    public function companyTreatment(Serie $serie, array $company): void
     {
 
         if (isset($this->companyCache[$company['name']])) {
@@ -483,12 +503,6 @@ class TVDBService
             }
 
             $this->companyCache[$company['name']] = $serieCompany;
-        }
-
-        if (!$serieCompany) {
-            $serieCompany = new SerieCompany();
-            $serieCompany->setName($company['name']);
-            $this->manager->persist($serieCompany);
         }
 
         $isProducer = false;

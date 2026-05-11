@@ -21,7 +21,14 @@ class ImageService
     }
 
 
-    public function addImage($folder, $fileName, $imageLink)
+    /**
+     * @param string $folder
+     * @param string $fileName
+     * @param string $imageLink
+     *
+     * @return void
+     */
+    public function addImage(string $folder, string $fileName, string $imageLink): void
     {
 
         $projectDir = $this->kernel->getProjectDir();

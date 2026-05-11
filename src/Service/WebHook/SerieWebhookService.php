@@ -64,10 +64,16 @@ class SerieWebhookService
 
 
     /**
+     * @param array<string, mixed> $data
+     * @param User  $user
+     * @param bool  $isAnime
+     * @param bool  $isReplay
+     *
+     * @return void
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public function addSerie($data, $user, $isAnime = false, $isReplay = false): void
+    public function addSerie(array $data, User $user, bool $isAnime = false, bool $isReplay = false): void
     {
 
         if ($isAnime) {
@@ -105,7 +111,9 @@ class SerieWebhookService
         $seriePlexId = str_replace("plex://show/", "", $data['grandparentGuid']);
         $episodePlexId = str_replace("plex://episode/", "", $data['guid']);
 
-        if (!$serie = $this->isSerieExist($seriePlexId, $episodeTVDBId)) {
+        $serie = $this->isSerieExist($seriePlexId, $episodeTVDBId);
+
+        if (!$serie) {
 
             $serie = new Serie();
             $serie->setName($data['grandparentTitle']);
@@ -150,8 +158,6 @@ class SerieWebhookService
                 $episode->setDuration($data['duration'] ?? null);
 
             }
-
-            dump($serie->getName()." : Saison ".$episode->getSeasonNumber()." - Episode ".$episode->getEpisodeNumber());
 
         }
 
@@ -209,9 +215,18 @@ class SerieWebhookService
     }
 
 
-    private function isSerieExist($plexId, $episodeTVDBId): bool|object
+    /**
+     * @param string   $plexId
+     * @param int|null $episodeTVDBId
+     *
+     * @return Serie|false
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    private function isSerieExist(string $plexId, ?int $episodeTVDBId): Serie|false
     {
 
+        /** @var Serie|null $serie */
         $serie = $this->serieRepository->findOneBy(['plexId' => $plexId]);
 
         if ($serie) {
@@ -222,11 +237,12 @@ class SerieWebhookService
 
             if ($tvdbAnimeId = $this->TVDBService->getSerieIdByEpisodeId($episodeTVDBId)) {
 
-                /** @var Serie $serie */
+                /** @var Serie|null $serie */
                 $serie = $this->serieRepository->findOneBy(['tvdbId' => $tvdbAnimeId]);
 
-                if ($serie) {
-                    $serie->setTVDBId($plexId);
+                if($serie){
+                    $serie->setTVDBId($tvdbAnimeId);
+
                     return $serie;
                 }
 
@@ -239,7 +255,14 @@ class SerieWebhookService
     }
 
 
-    private function isEpisodeExist($anime, $seasonNumber, $episodeNumber): bool|object
+    /**
+     * @param Serie $anime
+     * @param int   $seasonNumber
+     * @param int   $episodeNumber
+     *
+     * @return Episode|false
+     */
+    private function isEpisodeExist(Serie $anime, int $seasonNumber, int $episodeNumber): Episode|false
     {
 
 
@@ -255,6 +278,10 @@ class SerieWebhookService
 
 
     /**
+     * @param array<int, mixed> $data
+     * @param User              $user
+     *
+     * @return void
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
@@ -328,7 +355,6 @@ class SerieWebhookService
 
             }
 
-            dump($serie->getName()." : Saison ".$episode->getSeasonNumber()." - Episode ".$episode->getEpisodeNumber());
             $this->manager->persist($episode);
 
         }
@@ -344,9 +370,11 @@ class SerieWebhookService
 
     }
 
+
     // SerieWebhookService.php
     public function clearCaches(): void
     {
+
         // Réinitialiser l'ObjectManager avec le nouveau après reset
         $this->manager = $this->managerRegistry->getManager();
 
