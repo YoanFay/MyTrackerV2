@@ -19,9 +19,12 @@ class SerieTypeRepository extends ServiceEntityRepository
 
 
     /**
+     * @param string|null $plexId
+     * @param int|null    $tvdbId
+     *
      * @return SerieType[] Returns an array of SerieType objects
      */
-    public function findByPlexOrTVDB($plexId = null, $tvdbId = null): array
+    public function findByPlexOrTVDB(?string $plexId = null, ?int $tvdbId = null): array
     {
 
         $qb = $this->createQueryBuilder('s');
