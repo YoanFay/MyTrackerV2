@@ -61,3 +61,7 @@ docker-compose.yml
 /public/image/
 /public/error/
 /public/import/
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###
