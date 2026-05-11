@@ -16,7 +16,7 @@ class Episode
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $plexId = null;
@@ -25,20 +25,20 @@ class Episode
     private ?int $tvdbId = null;
 
     #[ORM\Column]
-    private ?int $seasonNumber = null;
+    private int $seasonNumber;
 
     #[ORM\Column]
-    private ?int $episodeNumber = null;
+    private int $episodeNumber;
 
     #[ORM\Column(nullable: true)]
     private ?int $duration = null;
 
     #[ORM\Column]
-    private ?bool $isNameVf = false;
+    private bool $isNameVf = false;
 
     #[ORM\ManyToOne(inversedBy: 'episodes')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Serie $serie = null;
+    private Serie $serie;
 
     /**
      * @var Collection<int, EpisodeShow>
@@ -128,7 +128,7 @@ class Episode
         return $this;
     }
 
-    public function isNameVf(): ?bool
+    public function isNameVf(): bool
     {
         return $this->isNameVf;
     }

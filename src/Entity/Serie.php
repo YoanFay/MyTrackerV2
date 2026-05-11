@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SerieRepository;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -17,7 +18,7 @@ class Serie
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $plexId = null;
@@ -26,22 +27,22 @@ class Serie
     private ?int $tvdbId = null;
 
     #[ORM\Column]
-    private ?bool $isVfName = false;
+    private bool $isVfName = false;
 
     #[ORM\Column(length: 255)]
-    private ?string $slug = null;
+    private string $slug;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $status = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $firstAired = null;
+    private ?DateTime $firstAired = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $lastAired = null;
+    private ?DateTime $lastAired = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $nextAired = null;
+    private ?DateTime $nextAired = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nameEng = null;
@@ -57,7 +58,7 @@ class Serie
 
     #[ORM\ManyToOne(inversedBy: 'series')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?SerieType $serieType = null;
+    private SerieType $serieType;
 
     /**
      * @var Collection<int, SerieUpdate>
@@ -153,7 +154,7 @@ class Serie
         return $this;
     }
 
-    public function isVfName(): ?bool
+    public function isVfName(): bool
     {
         return $this->isVfName;
     }
@@ -189,36 +190,36 @@ class Serie
         return $this;
     }
 
-    public function getFirstAired(): ?\DateTime
+    public function getFirstAired(): ?DateTime
     {
         return $this->firstAired;
     }
 
-    public function setFirstAired(?\DateTime $firstAired): static
+    public function setFirstAired(?DateTime $firstAired): static
     {
         $this->firstAired = $firstAired;
 
         return $this;
     }
 
-    public function getLastAired(): ?\DateTime
+    public function getLastAired(): ?DateTime
     {
         return $this->lastAired;
     }
 
-    public function setLastAired(?\DateTime $lastAired): static
+    public function setLastAired(?DateTime $lastAired): static
     {
         $this->lastAired = $lastAired;
 
         return $this;
     }
 
-    public function getNextAired(): ?\DateTime
+    public function getNextAired(): ?DateTime
     {
         return $this->nextAired;
     }
 
-    public function setNextAired(?\DateTime $nextAired): static
+    public function setNextAired(?DateTime $nextAired): static
     {
         $this->nextAired = $nextAired;
 

@@ -34,7 +34,7 @@ class SerieUpdate
 
     #[ORM\ManyToOne(inversedBy: 'serieUpdates')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Serie $serie = null;
+    private Serie $serie;
 
     public function getId(): ?int
     {

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\GamePlatformRepository;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -17,13 +18,13 @@ class GamePlatform
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255)]
-    private ?string $slug = null;
+    private string $slug;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $releaseDate = null;
+    private ?DateTime $releaseDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'gamePlatforms')]
     private ?GameCompany $gameCompany = null;
@@ -68,12 +69,12 @@ class GamePlatform
         return $this;
     }
 
-    public function getReleaseDate(): ?\DateTime
+    public function getReleaseDate(): ?DateTime
     {
         return $this->releaseDate;
     }
 
-    public function setReleaseDate(?\DateTime $releaseDate): static
+    public function setReleaseDate(?DateTime $releaseDate): static
     {
         $this->releaseDate = $releaseDate;
 

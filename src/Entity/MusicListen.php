@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\MusicListenRepository;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MusicListenRepository::class)]
@@ -14,27 +15,27 @@ class MusicListen
     private ?int $id = null;
 
     #[ORM\Column]
-    private ?\DateTime $listenAt = null;
+    private DateTime $listenAt;
 
     #[ORM\ManyToOne(inversedBy: 'musicListens')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Music $music = null;
+    private Music $music;
 
     #[ORM\ManyToOne(inversedBy: 'musicListens')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $user = null;
+    private User $user;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getListenAt(): ?\DateTime
+    public function getListenAt(): ?DateTime
     {
         return $this->listenAt;
     }
 
-    public function setListenAt(\DateTime $listenAt): static
+    public function setListenAt(DateTime $listenAt): static
     {
         $this->listenAt = $listenAt;
 

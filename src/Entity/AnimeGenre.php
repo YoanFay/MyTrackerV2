@@ -16,7 +16,7 @@ class AnimeGenre
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $nameEng = null;
+    private string $nameEng;
 
     /**
      * @var Collection<int, Serie>

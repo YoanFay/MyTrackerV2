@@ -16,7 +16,7 @@ class MBIDTagType
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     /**
      * @var Collection<int, MBIDTag>

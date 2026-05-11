@@ -17,10 +17,10 @@ class Game
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255)]
-    private ?string $slug = null;
+    private string $slug;
 
     #[ORM\Column(nullable: true)]
     private ?float $rating = null;
@@ -35,7 +35,7 @@ class Game
     private ?int $aggregatedRatingCount = null;
 
     #[ORM\Column]
-    private ?int $igdbId = null;
+    private int $igdbId;
 
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'gameChilds')]
     private ?self $gameParent = null;

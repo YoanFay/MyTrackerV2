@@ -16,7 +16,7 @@ class Music
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(nullable: true)]
     private ?int $duration = null;

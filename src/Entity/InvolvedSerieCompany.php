@@ -15,20 +15,20 @@ class InvolvedSerieCompany
 
     #[ORM\ManyToOne(inversedBy: 'involvedSerieCompanies')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Serie $serie = null;
+    private Serie $serie;
 
     #[ORM\ManyToOne(inversedBy: 'involvedSerieCompanies')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?SerieCompany $company = null;
+    private SerieCompany $company;
 
     #[ORM\Column]
-    private ?bool $isNetwork = false;
+    private bool $isNetwork = false;
 
     #[ORM\Column]
-    private ?bool $isStudio = false;
+    private bool $isStudio = false;
 
     #[ORM\Column]
-    private ?bool $isProducer = false;
+    private bool $isProducer = false;
 
     public function getId(): ?int
     {
@@ -59,7 +59,7 @@ class InvolvedSerieCompany
         return $this;
     }
 
-    public function isNetwork(): ?bool
+    public function isNetwork(): bool
     {
         return $this->isNetwork;
     }
@@ -71,7 +71,7 @@ class InvolvedSerieCompany
         return $this;
     }
 
-    public function isStudio(): ?bool
+    public function isStudio(): bool
     {
         return $this->isStudio;
     }
@@ -83,7 +83,7 @@ class InvolvedSerieCompany
         return $this;
     }
 
-    public function isProducer(): ?bool
+    public function isProducer(): bool
     {
         return $this->isProducer;
     }

@@ -15,20 +15,20 @@ class InvolvedMangaCompany
 
     #[ORM\ManyToOne(inversedBy: 'involvedMangaCompanies')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Manga $manga = null;
+    private Manga $manga;
 
     #[ORM\ManyToOne(inversedBy: 'involvedMangaCompanies')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?MangaCompany $mangaCompany = null;
+    private MangaCompany $mangaCompany;
 
     #[ORM\Column]
-    private ?bool $isAuthor = false;
+    private bool $isAuthor = false;
 
     #[ORM\Column]
-    private ?bool $isEditor = false;
+    private bool $isEditor = false;
 
     #[ORM\Column]
-    private ?bool $isDesigner = false;
+    private bool $isDesigner = false;
 
     public function getId(): ?int
     {
@@ -59,7 +59,7 @@ class InvolvedMangaCompany
         return $this;
     }
 
-    public function isAuthor(): ?bool
+    public function isAuthor(): bool
     {
         return $this->isAuthor;
     }
@@ -71,7 +71,7 @@ class InvolvedMangaCompany
         return $this;
     }
 
-    public function isEditor(): ?bool
+    public function isEditor(): bool
     {
         return $this->isEditor;
     }
@@ -83,7 +83,7 @@ class InvolvedMangaCompany
         return $this;
     }
 
-    public function isDesigner(): ?bool
+    public function isDesigner(): bool
     {
         return $this->isDesigner;
     }

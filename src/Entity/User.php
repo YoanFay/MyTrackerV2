@@ -17,13 +17,13 @@ class User
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $plexName = null;
+    private string $plexName;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $roles = null;
+    private string $roles;
 
     #[ORM\Column(length: 255)]
-    private ?string $password = null;
+    private string $password;
 
     /**
      * @var Collection<int, MovieShow>

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\MangaTomeRepository;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -17,20 +18,20 @@ class MangaTome
     private ?int $id = null;
 
     #[ORM\Column]
-    private ?int $tomeNumber = null;
+    private int $tomeNumber;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $releaseDate = null;
+    private ?DateTime $releaseDate = null;
 
     #[ORM\Column(nullable: true)]
     private ?int $page = null;
 
     #[ORM\Column]
-    private ?bool $isLastTome = false;
+    private bool $isLastTome = false;
 
     #[ORM\ManyToOne(inversedBy: 'mangaTomes')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Manga $manga = null;
+    private Manga $manga;
 
     /**
      * @var Collection<int, MangaTomeRead>
@@ -60,12 +61,12 @@ class MangaTome
         return $this;
     }
 
-    public function getReleaseDate(): ?\DateTime
+    public function getReleaseDate(): ?DateTime
     {
         return $this->releaseDate;
     }
 
-    public function setReleaseDate(?\DateTime $releaseDate): static
+    public function setReleaseDate(?DateTime $releaseDate): static
     {
         $this->releaseDate = $releaseDate;
 
@@ -84,7 +85,7 @@ class MangaTome
         return $this;
     }
 
-    public function isLastTome(): ?bool
+    public function isLastTome(): bool
     {
         return $this->isLastTome;
     }

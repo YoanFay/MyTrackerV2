@@ -16,14 +16,14 @@ class Manga
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255)]
-    private ?string $slug = null;
+    private string $slug;
 
     #[ORM\ManyToOne(inversedBy: 'mangas')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?MangaType $mangaType = null;
+    private MangaType $mangaType;
 
     /**
      * @var Collection<int, MangaTome>

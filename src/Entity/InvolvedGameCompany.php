@@ -15,23 +15,23 @@ class InvolvedGameCompany
 
     #[ORM\ManyToOne(inversedBy: 'involvedGameCompanies')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Game $game = null;
+    private Game $game;
 
     #[ORM\ManyToOne(inversedBy: 'involvedGameCompanies')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?GameCompany $gameCompany = null;
+    private GameCompany $gameCompany;
 
     #[ORM\Column]
-    private ?bool $isDeveloper = false;
+    private bool $isDeveloper = false;
 
     #[ORM\Column]
-    private ?bool $isPorting = false;
+    private bool $isPorting = false;
 
     #[ORM\Column]
-    private ?bool $isPublisher = false;
+    private bool $isPublisher = false;
 
     #[ORM\Column]
-    private ?bool $isSupporting = false;
+    private bool $isSupporting = false;
 
     public function getId(): ?int
     {
@@ -62,7 +62,7 @@ class InvolvedGameCompany
         return $this;
     }
 
-    public function isDeveloper(): ?bool
+    public function isDeveloper(): bool
     {
         return $this->isDeveloper;
     }
@@ -74,7 +74,7 @@ class InvolvedGameCompany
         return $this;
     }
 
-    public function isPorting(): ?bool
+    public function isPorting(): bool
     {
         return $this->isPorting;
     }
@@ -86,7 +86,7 @@ class InvolvedGameCompany
         return $this;
     }
 
-    public function isPublisher(): ?bool
+    public function isPublisher(): bool
     {
         return $this->isPublisher;
     }
@@ -98,7 +98,7 @@ class InvolvedGameCompany
         return $this;
     }
 
-    public function isSupporting(): ?bool
+    public function isSupporting(): bool
     {
         return $this->isSupporting;
     }

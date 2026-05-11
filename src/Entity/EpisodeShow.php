@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\EpisodeShowRepository;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: EpisodeShowRepository::class)]
@@ -14,27 +15,27 @@ class EpisodeShow
     private ?int $id = null;
 
     #[ORM\Column]
-    private ?\DateTime $showDate = null;
+    private DateTime $showDate;
 
     #[ORM\ManyToOne(inversedBy: 'episodeShows')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $user = null;
+    private User $user;
 
     #[ORM\ManyToOne(inversedBy: 'episodeShows')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Episode $episode = null;
+    private Episode $episode;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getShowDate(): ?\DateTime
+    public function getShowDate(): ?DateTime
     {
         return $this->showDate;
     }
 
-    public function setShowDate(\DateTime $showDate): static
+    public function setShowDate(DateTime $showDate): static
     {
         $this->showDate = $showDate;
 

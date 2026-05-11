@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\GameTrackerRepository;
+use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -15,13 +16,13 @@ class GameTracker
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTime $startDate = null;
+    private DateTime $startDate;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $endDate = null;
+    private ?DateTime $endDate = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $completeDate = null;
+    private ?DateTime $completeDate = null;
 
     #[ORM\Column(nullable: true)]
     private ?int $endTime = null;
@@ -30,19 +31,19 @@ class GameTracker
     private ?int $completeTime = null;
 
     #[ORM\Column]
-    private ?bool $isNoComplete = false;
+    private bool $isNoComplete = false;
 
     #[ORM\ManyToOne(inversedBy: 'gameTrackers')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $user = null;
+    private User $user;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?GamePlatform $gamePlatform = null;
+    private GamePlatform $gamePlatform;
 
     #[ORM\ManyToOne(inversedBy: 'gameTrackers')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Game $game = null;
+    private Game $game;
 
     #[ORM\Column(nullable: true)]
     private ?float $rating = null;
@@ -52,36 +53,36 @@ class GameTracker
         return $this->id;
     }
 
-    public function getStartDate(): ?\DateTime
+    public function getStartDate(): ?DateTime
     {
         return $this->startDate;
     }
 
-    public function setStartDate(\DateTime $startDate): static
+    public function setStartDate(DateTime $startDate): static
     {
         $this->startDate = $startDate;
 
         return $this;
     }
 
-    public function getEndDate(): ?\DateTime
+    public function getEndDate(): ?DateTime
     {
         return $this->endDate;
     }
 
-    public function setEndDate(?\DateTime $endDate): static
+    public function setEndDate(?DateTime $endDate): static
     {
         $this->endDate = $endDate;
 
         return $this;
     }
 
-    public function getCompleteDate(): ?\DateTime
+    public function getCompleteDate(): ?DateTime
     {
         return $this->completeDate;
     }
 
-    public function setCompleteDate(?\DateTime $completeDate): static
+    public function setCompleteDate(?DateTime $completeDate): static
     {
         $this->completeDate = $completeDate;
 
@@ -112,7 +113,7 @@ class GameTracker
         return $this;
     }
 
-    public function isNoComplete(): ?bool
+    public function isNoComplete(): bool
     {
         return $this->isNoComplete;
     }

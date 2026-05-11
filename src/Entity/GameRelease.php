@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\GameReleaseRepository;
+use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -15,27 +16,27 @@ class GameRelease
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTime $releaseDate = null;
+    private DateTime $releaseDate;
 
     #[ORM\ManyToOne(inversedBy: 'gameReleases')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?GamePlatform $gamePlatform = null;
+    private GamePlatform $gamePlatform;
 
     #[ORM\ManyToOne(inversedBy: 'gameReleases')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Game $game = null;
+    private Game $game;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getReleaseDate(): ?\DateTime
+    public function getReleaseDate(): ?DateTime
     {
         return $this->releaseDate;
     }
 
-    public function setReleaseDate(\DateTime $releaseDate): static
+    public function setReleaseDate(DateTime $releaseDate): static
     {
         $this->releaseDate = $releaseDate;
 

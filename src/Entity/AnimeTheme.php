@@ -17,7 +17,7 @@ class AnimeTheme
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $nameEng = null;
+    private string $nameEng;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nameFra = null;
@@ -29,7 +29,7 @@ class AnimeTheme
     private ?string $descriptionFra = null;
 
     #[ORM\Column]
-    private ?int $level = null;
+    private int $level;
 
     /**
      * @var Collection<int, SerieAnimeTheme>

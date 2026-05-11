@@ -15,11 +15,11 @@ class SerieAnimeTheme
 
     #[ORM\ManyToOne(inversedBy: 'serieAnimeThemes')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Serie $serie = null;
+    private Serie $serie;
 
     #[ORM\ManyToOne(inversedBy: 'serieAnimeThemes')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?AnimeTheme $animeTheme = null;
+    private AnimeTheme $animeTheme;
 
     #[ORM\Column]
     private bool $isSpoiler = false;

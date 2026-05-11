@@ -17,10 +17,10 @@ class Movie
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    private string $name;
 
     #[ORM\Column(length: 255)]
-    private ?string $slug = null;
+    private string $slug;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $tmdbId = null;
@@ -32,7 +32,7 @@ class Movie
     private ?int $duration = null;
 
     #[ORM\Column]
-    private ?bool $updated = null;
+    private bool $updated = false;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTime $releaseDate = null;
@@ -120,7 +120,7 @@ class Movie
         return $this;
     }
 
-    public function isUpdated(): ?bool
+    public function isUpdated(): bool
     {
         return $this->updated;
     }
