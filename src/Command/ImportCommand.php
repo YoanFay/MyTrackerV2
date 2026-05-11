@@ -9,6 +9,7 @@ use App\Service\WebHook\MusicWebhookService;
 use App\Service\WebHook\SerieWebhookService;
 use DateTime;
 use DateTimeZone;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Cache\InvalidArgumentException;
@@ -166,8 +167,9 @@ class ImportCommand extends Command
 
     private function resetEntityManagerIfClosed(): void
     {
-
         $em = $this->doctrine->getManager();
+        assert($em instanceof EntityManagerInterface);
+
         if (!$em->isOpen()) {
             $this->doctrine->resetManager();
         }
@@ -175,6 +177,11 @@ class ImportCommand extends Command
 
 
     /**
+     * @param string             $dir
+     * @param array<int, string> $data
+     * @param Exception          $e
+     *
+     * @return void
      * @throws Exception
      */
     private function logError(string $dir, array $data, Exception $e): void
