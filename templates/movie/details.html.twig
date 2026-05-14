@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ movie.name }}{% endblock %}
+
+{% block body %}
+    <div class="w-100 p-3 d-flex flex-column-reverse flex-lg-row justify-content-between">
+        <div>
+            <h1>
+                {{ movie.name }} ({{movie.duration|MsToMS}})
+            </h1>
+            <h2>Date de sortie : {{ movie.releaseDate|dateFNoDay }}</h2>
+
+            <div class="d-flex flex-row">
+                <div>
+                    <p>Genres : </p>
+                    <ul>
+                        {% for tmdbGenres in movie.TmdbGenres %}
+                            <li>
+                                {{ tmdbGenres.nameFra ?? tmdbGenres.nameEng }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex flex-row">
+                <div>
+                    <p>Date de visionnage : </p>
+                    <ul>
+                        {% for show in movie.movieShows %}
+                            <li>
+                                {{ show.showDate|dateF }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+        <div class="d-flex justify-content-end">
+            <img
+                class="cover"
+                src="/image/movie/poster/{{ movie.slug }}.jpeg"
+            >
+        </div>
+    </div>
+{% endblock %}

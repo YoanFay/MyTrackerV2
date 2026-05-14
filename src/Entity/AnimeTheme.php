@@ -28,9 +28,6 @@ class AnimeTheme
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $descriptionFra = null;
 
-    #[ORM\Column]
-    private int $level;
-
     /**
      * @var Collection<int, SerieAnimeTheme>
      */
@@ -91,18 +88,6 @@ class AnimeTheme
     public function setDescriptionFra(?string $descriptionFra): static
     {
         $this->descriptionFra = $descriptionFra;
-
-        return $this;
-    }
-
-    public function getLevel(): ?int
-    {
-        return $this->level;
-    }
-
-    public function setLevel(int $level): static
-    {
-        $this->level = $level;
 
         return $this;
     }

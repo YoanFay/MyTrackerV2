@@ -22,6 +22,9 @@ class SerieAnimeTheme
     private AnimeTheme $animeTheme;
 
     #[ORM\Column]
+    private int $level;
+
+    #[ORM\Column]
     private bool $isSpoiler = false;
 
     public function getId(): ?int
@@ -49,6 +52,18 @@ class SerieAnimeTheme
     public function setAnimeTheme(?AnimeTheme $animeTheme): static
     {
         $this->animeTheme = $animeTheme;
+
+        return $this;
+    }
+
+    public function getLevel(): ?int
+    {
+        return $this->level;
+    }
+
+    public function setLevel(int $level): static
+    {
+        $this->level = $level;
 
         return $this;
     }

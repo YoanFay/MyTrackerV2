@@ -16,6 +16,20 @@ class EpisodeShowRepository extends ServiceEntityRepository
         parent::__construct($registry, EpisodeShow::class);
     }
 
+
+    /**
+     * @return EpisodeShow[] Returns an array of EpisodeShow objects
+     */
+    public function getShowByDate($date): array
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.showDate >= :date')
+            ->setParameter('date', $date)
+            ->orderBy('e.showDate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return EpisodeShow[] Returns an array of EpisodeShow objects
     //     */

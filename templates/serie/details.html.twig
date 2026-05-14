@@ -1,0 +1,202 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ serie.name }}{% endblock %}
+
+{% block body %}
+    <div class="w-100 p-3 d-flex flex-column-reverse flex-lg-row justify-content-between">
+        <div>
+            <h1>
+                {{ serie.name }}
+                (
+                {% if serie.status in ['FINISHED', 'Ended'] %}
+                    Terminé
+                {% elseif serie.status in ['RELEASING', 'Continuing'] %}
+                    En cours
+                {% elseif serie.status in ['NOT_YET_RELEASED'] %}
+                    En pause
+                {% endif %}
+                )
+            </h1>
+            <h2>{{ countEpisodeShow }} épisodes vus - {{ totalDuration|MsToHM }} de visionnage</h2>
+            {% if serie.serieType.name == "Anime" %}
+                <h3>Score Anilist : {{ serie.score }}%</h3>
+            {% endif %}
+
+            <ul>
+                <li>Date de sortie : {{ serie.firstAired|dateFNoDay }}</li>
+                {% if serie.nextAired %}
+                    <li>Date de sortie du prochain épisode : {{ serie.nextAired|dateFNoDay }}</li>
+                {% endif %}
+                {% if serie.status in ['FINISHED', 'Ended'] %}
+                    <li>Date de sortie du prochain épisode : {{ serie.lastAired|dateFNoDay }}</li>
+                {% endif %}
+            </ul>
+
+            <ul>
+                {% if studios %}
+                    <li>
+                        Studio :
+                        <ul>
+                            {% for studio in studios %}
+                                <li>{{ studio.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endif %}
+                {% if producers %}
+                    <li>
+                        Producteur :
+                        <ul>
+                            {% for producer in producers %}
+                                <li>{{ producer.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endif %}
+                {% if networks %}
+                    <li>
+                        Network :
+                        <ul>
+                            {% for network in networks %}
+                                <li>{{ network.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endif %}
+            </ul>
+
+            <div class="d-flex flex-row">
+                {% if serie.serieType.name != "Anime" %}
+                    <div>
+                        <p>Genres : </p>
+                        <ul>
+                            {% for tvdbGenre in serie.TvdbGenres %}
+                                <li>
+                                    {{ tvdbGenre.nameFra ?? tvdbGenre.nameEng }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <p>Thèmes : </p>
+                        <ul>
+                            {% for tvdbTag in tvdbTagList %}
+                                <li>
+                                    {{ tvdbTag.tvdbTagType.nameFra ?? tvdbTag.tvdbTagType.nameEng }}
+                                    <ul>
+                                        {% for tag in tvdbTag.tag %}
+                                            <li>{{ tag.nameFra ?? tag.nameEng }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <div>
+                        <p>Genres : </p>
+                        <ul>
+                            {% for animeGenre in serie.animeGenres %}
+                                <li>
+                                    {{ animeGenre.nameFra ?? animeGenre.nameEng }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <p>Thèmes : </p>
+                        <ul>
+                            {% for animeTag in serie.serieAnimeThemes|sort((a, b) => b.level <=> a.level)  %}
+                                {% if animeTag.isSpoiler == false %}
+                                    <li>
+                                        {{ animeTag.animeTheme.nameFra ?? animeTag.animeTheme.nameEng }} ({{ animeTag.level }}%)
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+        <div class="d-flex justify-content-end">
+            <img
+                class="cover"
+                src="/image/serie/poster/{{ serie.tvdbId }}.jpeg"
+            >
+        </div>
+    </div>
+    <h2>Liste des épisodes</h2>
+
+    {#<div class="d-flex flex-wrap col-12 justify-content-around">
+
+
+        {% for key, episodes in episodeList %}
+            <div class="col-5">
+                <h3>Saison {{ key }}</h3>
+                {% for episode in episodes %}
+                    <div class="card border border-secondary rounded-3 d-flex flex-column p-2 my-2">
+                        <div class="d-flex flex-column align-items-start">
+                            <p class="my-2">
+                                Épisode {{ '%02d'|format(episode.episodeNumber) }} : {{ episode.name }}
+                                ({{ episode.duration|MsToMS }})
+                            </p>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center">
+                            <hr class="my-1">
+                            <ul class="my-1">
+                                {% for show in episode.episodeShows %}
+                                    <li>{{ show.showDate|dateFWithHour }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>#}
+
+
+    {% for key, episodes in episodeList %}
+        <div>
+            <h3 class="w-100 text-center" onclick="toggleSeason({{key}})">Saison {{ '%02d'|format(key) }}<span id="arrow-{{ key }}" class="material-symbols-outlined arrow-rotate">arrow_drop_down</span></h3>
+            <div id="episodes-{{ key }}" class="width: max-content episodes-animation">
+                {% for episode in episodes %}
+                    <div class="card border border-secondary rounded-3 d-flex flex-column p-2 my-2">
+                        <div class="d-flex flex-column align-items-start">
+                            <p class="my-2 text-nowrap">
+                                Épisode {{ '%02d'|format(episode.episodeNumber) }} : {{ episode.name }}
+                                ({{ episode.duration|MsToMS }})
+                            </p>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center">
+                            <hr class="my-1">
+                            <ul class="my-1">
+                                {% for show in episode.episodeShows %}
+                                    <li>{{ show.showDate|dateFWithHour }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+
+
+    <script>
+
+        function toggleSeason(key) {
+            const div = document.getElementById('episodes-' + key);
+            const arrow = document.getElementById('arrow-' + key);
+
+            div.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+
+    </script>
+
+{% endblock %}

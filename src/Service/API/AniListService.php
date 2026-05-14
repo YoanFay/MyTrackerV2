@@ -11,6 +11,7 @@ use App\Entity\SerieCompany;
 use App\Repository\AnimeGenreRepository;
 use App\Repository\AnimeThemeRepository;
 use App\Repository\InvolvedSerieCompanyRepository;
+use App\Repository\SerieAnimeThemeRepository;
 use App\Repository\SerieCompanyRepository;
 use App\Service\StringService;
 use DateTime;
@@ -28,6 +29,8 @@ class AniListService
     private AnimeGenreRepository $animeGenreRepository;
 
     private AnimeThemeRepository $animeThemeRepository;
+
+    private SerieAnimeThemeRepository $serieAnimeThemeRepository;
 
     private InvolvedSerieCompanyRepository $involvedSerieCompanyRepository;
 
@@ -51,6 +54,7 @@ class AniListService
         SerieCompanyRepository         $serieCompanyRepository,
         AnimeGenreRepository           $animeGenreRepository,
         AnimeThemeRepository           $animeThemeRepository,
+        SerieAnimeThemeRepository      $serieAnimeThemeRepository,
         InvolvedSerieCompanyRepository $involvedSerieCompanyRepository,
         StringService                  $stringService,
         ManagerRegistry                $managerRegistry,
@@ -60,6 +64,7 @@ class AniListService
         $this->serieCompanyRepository = $serieCompanyRepository;
         $this->animeGenreRepository = $animeGenreRepository;
         $this->animeThemeRepository = $animeThemeRepository;
+        $this->serieAnimeThemeRepository = $serieAnimeThemeRepository;
         $this->involvedSerieCompanyRepository = $involvedSerieCompanyRepository;
         $this->stringService = $stringService;
         $this->manager = $managerRegistry->getManager();
@@ -85,10 +90,19 @@ class AniListService
         }
 
         $variables = [
-            "search" => mb_convert_kana($searchName, 'a', 'UTF-8')
+            "search" => mb_convert_kana(str_replace(['é','è'], 'e', $searchName), 'a', 'UTF-8')
         ];
 
         $data = $this->request($query, $variables);
+
+        if (!$anime->getLastSeasonName() && !$data){
+
+            $variables = [
+                "search" => mb_convert_kana(str_replace(['é','è'], 'e', $anime->getName()), 'a', 'UTF-8')
+            ];
+
+            $data = $this->request($query, $variables);
+        }
 
         if (!$anime->getName()) {
             $anime->setName($data['title']['english']);
@@ -129,7 +143,7 @@ class AniListService
 
         }
 
-        $newScore = (int) round($totalScore / $amount, 0, PHP_ROUND_HALF_DOWN);
+        $newScore = (int)round($totalScore / $amount, 0, PHP_ROUND_HALF_DOWN);
 
         $anime->setScore($newScore);
 
@@ -306,7 +320,7 @@ class AniListService
 
 
     /**
-     * @param Serie $anime
+     * @param Serie                $anime
      * @param array<string, mixed> $dataTheme
      *
      * @return void
@@ -326,7 +340,6 @@ class AniListService
             if (!$animeTheme) {
                 $animeTheme = new AnimeTheme();
                 $animeTheme->setNameEng($themeName);
-                $animeTheme->setLevel($level);
                 $animeTheme->setDescriptionEng($description);
 
                 $this->manager->persist($animeTheme);
@@ -335,9 +348,25 @@ class AniListService
             $this->animeThemeCache[$themeName] = $animeTheme;
         }
 
-        $serieAnimeTheme = new SerieAnimeTheme();
-        $serieAnimeTheme->setSerie($anime);
-        $serieAnimeTheme->setAnimeTheme($animeTheme);
+        /** @var SerieAnimeTheme $serieAnimeTheme */
+        $serieAnimeTheme = $this->serieAnimeThemeRepository->findOneBy(['serie' => $anime, 'animeTheme' => $animeTheme]);
+
+        if (!$serieAnimeTheme) {
+            $serieAnimeTheme = new SerieAnimeTheme();
+            $serieAnimeTheme->setSerie($anime);
+            $serieAnimeTheme->setAnimeTheme($animeTheme);
+            $serieAnimeTheme->setLevel($level);
+
+        } else {
+
+            if ($level !== $serieAnimeTheme->getLevel()) {
+
+                $level = ($level + $serieAnimeTheme->getLevel()) / 2;
+
+                $serieAnimeTheme->setLevel($level);
+            }
+
+        }
 
         if ($dataTheme['isMediaSpoiler'] || $dataTheme['isGeneralSpoiler']) {
             $serieAnimeTheme->setIsSpoiler(true);

@@ -214,6 +214,11 @@ class TVDBService
 
         if ($data !== null && $data['status'] === "success") {
             $serie->setNameEng($data['data']['name']);
+
+            if (!$serie->isVfName()){
+                $serie->setName($data['data']['name']);
+                $serie->setSlug($this->stringService->slugify($data['data']['name']));
+            }
         }
     }
 
@@ -244,7 +249,7 @@ class TVDBService
         $score = -1;
 
         foreach ($data['artworks'] as $artwork) {
-            if ($artwork['language'] === "fra" && $artwork['includesText'] && $artwork['score'] >= $score) {
+            if ($artwork['language'] === "fra" && $artwork['includesText'] && $artwork['score'] > $score) {
                 $image = $artwork;
                 $score = $artwork['score'];
             }
@@ -255,23 +260,17 @@ class TVDBService
             $score = -1;
 
             foreach ($data['artworks'] as $artwork) {
-                if ($artwork['language'] === "eng" && $artwork['includesText'] && $artwork['score'] >= $score) {
+                if ($artwork['language'] === "eng" && $artwork['includesText'] && $artwork['score'] > $score) {
                     $image = $artwork;
                     $score = $artwork['score'];
                 }
             }
         }
 
-        if ($image === null) {
+        if ($image === null && $data['image']) {
 
-            $score = -1;
+            $image = $data;
 
-            foreach ($data['artworks'] as $artwork) {
-                if (/* $artwork['language'] === null && */ $artwork['score'] >= $score) {
-                    $image = $artwork;
-                    $score = $artwork['score'];
-                }
-            }
         }
 
         if ($image === null) {
@@ -279,7 +278,7 @@ class TVDBService
             return;
         }
 
-        $this->imageService->addImage("serie/poster/", $serie->getSlug(), $image['image']);
+        $this->imageService->addImage("serie/poster/", $serie->getTvdbId(), $image['image']);
     }
 
 
