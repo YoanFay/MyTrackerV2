@@ -348,7 +348,7 @@ class AniListService
             $this->animeThemeCache[$themeName] = $animeTheme;
         }
 
-        /** @var SerieAnimeTheme $serieAnimeTheme */
+        /** @var ?SerieAnimeTheme $serieAnimeTheme */
         $serieAnimeTheme = $this->serieAnimeThemeRepository->findOneBy(['serie' => $anime, 'animeTheme' => $animeTheme]);
 
         if (!$serieAnimeTheme) {

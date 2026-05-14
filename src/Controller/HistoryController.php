@@ -11,13 +11,21 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class HistoryController extends AbstractController
 {
+    /**
+     * @param EpisodeShowRepository $episodeShowRepository
+     * @param MovieShowRepository   $movieShowRepository
+     * @param int|null              $year
+     * @param int|null              $month
+     *
+     * @return Response
+     */
     #[Route('/history/{year}/{month}', name: 'history')]
     public function index
     (
         EpisodeShowRepository $episodeShowRepository,
         MovieShowRepository   $movieShowRepository,
-        int                   $year = null,
-        int                   $month = null,
+        ?int                   $year = null,
+        ?int                   $month = null,
     ): Response
     {
 

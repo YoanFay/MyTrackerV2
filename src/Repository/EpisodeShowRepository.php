@@ -18,9 +18,11 @@ class EpisodeShowRepository extends ServiceEntityRepository
 
 
     /**
+     * @param string $date
+     *
      * @return EpisodeShow[] Returns an array of EpisodeShow objects
      */
-    public function getShowByDate($date): array
+    public function getShowByDate(string $date): array
     {
         return $this->createQueryBuilder('e')
             ->andWhere('e.showDate >= :date')
