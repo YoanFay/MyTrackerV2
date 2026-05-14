@@ -56,10 +56,14 @@ final class HistoryController extends AbstractController
         ];
 
         if($year && $month){
-            $episodeShows = $episodeShowRepository->getShowByDate($year.'-'.$month.'-'.'-01');
+
+            $startDate = $year.'-'.$month.'-01';
+            $endDate = date("Y-m-t 23:59", strtotime($startDate));
+
+            $episodeShows = $episodeShowRepository->getShowByDate($startDate, $endDate);
             $title = 'Historique du mois de '.$monthList[$month-1].' '.$year;
         }elseif($year){
-            $episodeShows = $episodeShowRepository->getShowByDate($year.'-'.'-01-01');
+            $episodeShows = $episodeShowRepository->getShowByDate($year.'-01-01', $year.'-12-31 23:59');
             $title = 'Historique de '.$year;
         }else{
             $episodeShows = $episodeShowRepository->findAll();
@@ -97,9 +101,13 @@ final class HistoryController extends AbstractController
         }
 
         if($year && $month){
-            $movieShows = $movieShowRepository->getShowByDate($year.'-'.$month.'-'.'-01');
+
+            $startDate = $year.'-'.$month.'-01';
+            $endDate = date("Y-m-t 23:59", strtotime($startDate));
+
+            $movieShows = $movieShowRepository->getShowByDate($startDate, $endDate);
         }elseif($year){
-            $movieShows = $movieShowRepository->getShowByDate($year.'-'.'-01-01');
+            $movieShows = $movieShowRepository->getShowByDate($year.'-01-01', $year.'-12-31 23:59');
         }else{
             $movieShows = $movieShowRepository->findAll();
         }
