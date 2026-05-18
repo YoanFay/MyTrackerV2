@@ -216,8 +216,9 @@ class SerieWebhookService
 
 
     /**
-     * @param string   $plexId
-     * @param int|null $episodeTVDBId
+     * @param string      $plexId
+     * @param int|null    $episodeTVDBId
+     * @param string|null $serieTVDBId
      *
      * @return Serie|false
      * @throws GuzzleException
