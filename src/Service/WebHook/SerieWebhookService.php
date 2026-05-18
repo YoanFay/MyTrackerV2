@@ -65,9 +65,9 @@ class SerieWebhookService
 
     /**
      * @param array<string, mixed> $data
-     * @param User  $user
-     * @param bool  $isAnime
-     * @param bool  $isReplay
+     * @param User                 $user
+     * @param bool                 $isAnime
+     * @param bool                 $isReplay
      *
      * @return void
      * @throws GuzzleException
@@ -216,33 +216,50 @@ class SerieWebhookService
 
 
     /**
-     * @param string      $plexId
+     * @param string|null $plexId
      * @param int|null    $episodeTVDBId
-     * @param string|null $serieTVDBId
+     * @param int|null    $serieTVDBId
      *
      * @return Serie|false
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    private function isSerieExist(string $plexId, ?int $episodeTVDBId, ?string $serieTVDBId = null): Serie|false
+    private function isSerieExist(?string $plexId, ?int $episodeTVDBId, ?int $serieTVDBId = null): Serie|false
     {
 
-        /** @var Serie|null $serie */
-        $serie = $this->serieRepository->findByPlexOrTvdbId($plexId, $serieTVDBId);
+        if ($plexId) {
+            /** @var Serie|null $serie */
+            $serie = $this->serieRepository->findOneBy(['plexId' => $plexId]);
 
-        if ($serie) {
-            return $serie;
+            if ($serie) {
+
+                if ($serieTVDBId) {
+                    $serie->setTvdbId($serieTVDBId);
+                }
+
+                return $serie;
+            }
         }
 
         if ($episodeTVDBId) {
 
-            if ($tvdbAnimeId = $this->TVDBService->getSerieIdByEpisodeId($episodeTVDBId)) {
+            if ($serieTVDBId) {
+                $tvdbId = $serieTVDBId;
+            } else {
+                $tvdbId = $this->TVDBService->getSerieIdByEpisodeId($episodeTVDBId);
+            }
+
+            if ($tvdbId) {
 
                 /** @var Serie|null $serie */
-                $serie = $this->serieRepository->findOneBy(['tvdbId' => $tvdbAnimeId]);
+                $serie = $this->serieRepository->findOneBy(['tvdbId' => $tvdbId]);
 
-                if($serie){
-                    $serie->setTVDBId($tvdbAnimeId);
+                if ($serie) {
+                    $serie->setTVDBId($tvdbId);
+
+                    if ($plexId) {
+                        $serie->setPlexId($plexId);
+                    }
 
                     return $serie;
                 }
