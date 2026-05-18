@@ -223,11 +223,11 @@ class SerieWebhookService
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    private function isSerieExist(string $plexId, ?int $episodeTVDBId): Serie|false
+    private function isSerieExist(string $plexId, ?int $episodeTVDBId, ?string $serieTVDBId = null): Serie|false
     {
 
         /** @var Serie|null $serie */
-        $serie = $this->serieRepository->findOneBy(['plexId' => $plexId]);
+        $serie = $this->serieRepository->findByPlexOrTvdbId($plexId, $serieTVDBId);
 
         if ($serie) {
             return $serie;
@@ -319,7 +319,7 @@ class SerieWebhookService
 
         }
 
-        if (!$serie = $this->isSerieExist($seriePlexId, $episodeTVDBId)) {
+        if (!$serie = $this->isSerieExist($seriePlexId, $episodeTVDBId, $serieTVDBId)) {
 
             $serie = new Serie();
             $serie->setPlexId($seriePlexId);
@@ -327,6 +327,7 @@ class SerieWebhookService
             $serie->setTvdbId($serieTVDBId);
 
             $this->TVDBService->updateSerieInfo($serie);
+
 
             if ($serieType->getName() === "Anime") {
 

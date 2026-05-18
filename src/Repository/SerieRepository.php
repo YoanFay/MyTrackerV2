@@ -16,6 +16,26 @@ class SerieRepository extends ServiceEntityRepository
         parent::__construct($registry, Serie::class);
     }
 
+
+    /**
+     * @param string|null $plexId
+     * @param string|null $tvdbId
+     *
+     * @return Serie[]|null Returns an array of Music objects
+     */
+    public function findByPlexOrTvdbId(?string $plexId, ?string $tvdbId)
+    {
+
+        return $this->createQueryBuilder('s')
+            ->where('s.plexId = :plexId')
+            ->orWhere('s.tvdbId = :tvdbId')
+            ->setParameter('plexId', $plexId)
+            ->setParameter('tvdbId', $tvdbId)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+    }
+
     //    /**
     //     * @return Serie[] Returns an array of Serie objects
     //     */
