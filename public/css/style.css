@@ -12,6 +12,14 @@ body{
     background-color: rgb(48, 48, 46) !important;
 }
 
+.max-content{
+    width: max-content;
+}
+
+.separator{
+    border-right: solid #e0e0e0;
+}
+
 /* HISTORY */
 
 .history-card{
@@ -55,6 +63,12 @@ body{
 .cover{
     width: 400px;
     height: 588px;
+    position: fixed;
+}
+
+.cover-div{
+    width: 400px;
+    height: 588px;
 }
 
 /* LINK */
@@ -92,13 +106,33 @@ body{
     transform: rotate(180deg);
 }
 
+@media only screen and (max-width: 1370px) {
+
+    .max-content{
+        width: inherit;
+    }
+
+}
+
 @media only screen and (max-width: 600px) {
 
     .cover{
         width: 100%;
+        height: calc((100vw * 1000) / 680);
+        position: static;
+    }
+
+    .cover-div{
+        width: initial;
+        height: initial;
     }
 
     .history-card{
         width: 97%;
+    }
+
+    .separator{
+        border-right: none;
+        border-bottom: solid #e0e0e0;
     }
 }
