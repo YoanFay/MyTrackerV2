@@ -123,6 +123,10 @@ class SerieWebhookService
 
         }
 
+        if (!$serie->getPlexId()){
+            $serie->setPlexId($seriePlexId);
+        }
+
         if (!$episode = $this->isEpisodeExist($serie, $data['parentIndex'], $data['index'])) {
 
             $episode = new Episode();
