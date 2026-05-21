@@ -6,6 +6,7 @@ use App\Entity\Episode;
 use App\Entity\InvolvedSerieCompany;
 use App\Entity\Serie;
 use App\Entity\SerieCompany;
+use App\Entity\SerieUpdate;
 use App\Entity\TVDBGenre;
 use App\Entity\TVDBTag;
 use App\Entity\TVDBTagType;
@@ -19,6 +20,7 @@ use App\Service\StringService;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Cache\InvalidArgumentException;
@@ -131,9 +133,7 @@ class TVDBService
 
             $data = json_decode($response->getBody(), true);
 
-            dump($data);
-
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $data = null;
         }
 
@@ -215,7 +215,7 @@ class TVDBService
         if ($data !== null && $data['status'] === "success") {
             $serie->setNameEng($data['data']['name']);
 
-            if (!$serie->isVfName()){
+            if (!$serie->isVfName()) {
                 $serie->setName($data['data']['name']);
                 $serie->setSlug($this->stringService->slugify($data['data']['name']));
             }
@@ -548,6 +548,60 @@ class TVDBService
         $this->tagCache = [];
         $this->tagTypeCache = [];
         $this->genreCache = [];
+    }
+
+
+    /**
+     * @param Serie $serie
+     *
+     * @return void
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     * @throws Exception
+     */
+    public function updateNextAired(Serie $serie): void
+    {
+
+
+        $serieData = self::getData('/series/'.$serie->getTvdbId());
+
+        $serieUpdate = new SerieUpdate();
+        $serieUpdate->setUpdateDate(new DateTime());
+        $serieUpdate->setSerie($serie);
+
+        $next = null;
+
+        if ($serieData['data']['nextAired']) {
+
+            $next = new DateTime($serieData['data']['nextAired']);
+
+        }
+
+        if($serie->getNextAired() != $next){
+
+            $serieUpdate->setAiredOld($serie->getNextAired());
+            $serieUpdate->setAiredNew($next);
+
+            $serie->setNextAired($next);
+
+            $this->manager->persist($serie);
+            $this->manager->persist($serieUpdate);
+
+        }
+
+        if ($serieData['data']['status']['name'] !== $serie->getStatus()) {
+
+            $serieUpdate->setStatusOld($serie->getStatus());
+            $serieUpdate->setStatusNew($serieData['data']['status']['name']);
+            $serie->setStatus($serieData['data']['status']['name']);
+
+            $this->manager->persist($serie);
+            $this->manager->persist($serieUpdate);
+
+        }
+
+        $this->manager->flush();
+
     }
 
 }

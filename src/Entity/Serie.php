@@ -102,6 +102,9 @@ class Serie
     #[ORM\OneToMany(targetEntity: SerieAnimeTheme::class, mappedBy: 'serie')]
     private Collection $serieAnimeThemes;
 
+    #[ORM\Column]
+    private bool $isFollow = true;
+
     public function __construct()
     {
         $this->serieUpdates = new ArrayCollection();
@@ -474,6 +477,18 @@ class Serie
                 $serieAnimeTheme->setSerie(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isFollow(): ?bool
+    {
+        return $this->isFollow;
+    }
+
+    public function setIsFollow(bool $isFollow): static
+    {
+        $this->isFollow = $isFollow;
 
         return $this;
     }

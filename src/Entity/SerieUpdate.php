@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SerieUpdateRepository;
+use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -21,10 +22,10 @@ class SerieUpdate
     private ?string $statusNew = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $airedOld = null;
+    private ?DateTime $airedOld = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $airedNew = null;
+    private ?DateTime $airedNew = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $airedTypeOld = null;
@@ -35,6 +36,9 @@ class SerieUpdate
     #[ORM\ManyToOne(inversedBy: 'serieUpdates')]
     #[ORM\JoinColumn(nullable: false)]
     private Serie $serie;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    private DateTime $updateDate;
 
     public function getId(): ?int
     {
@@ -65,24 +69,24 @@ class SerieUpdate
         return $this;
     }
 
-    public function getAiredOld(): ?\DateTime
+    public function getAiredOld(): ?DateTime
     {
         return $this->airedOld;
     }
 
-    public function setAiredOld(?\DateTime $airedOld): static
+    public function setAiredOld(?DateTime $airedOld): static
     {
         $this->airedOld = $airedOld;
 
         return $this;
     }
 
-    public function getAiredNew(): ?\DateTime
+    public function getAiredNew(): ?DateTime
     {
         return $this->airedNew;
     }
 
-    public function setAiredNew(?\DateTime $airedNew): static
+    public function setAiredNew(?DateTime $airedNew): static
     {
         $this->airedNew = $airedNew;
 
@@ -121,6 +125,18 @@ class SerieUpdate
     public function setSerie(?Serie $serie): static
     {
         $this->serie = $serie;
+
+        return $this;
+    }
+
+    public function getUpdateDate(): ?DateTime
+    {
+        return $this->updateDate;
+    }
+
+    public function setUpdateDate(DateTime $updateDate): static
+    {
+        $this->updateDate = $updateDate;
 
         return $this;
     }

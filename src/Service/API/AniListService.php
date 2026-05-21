@@ -8,6 +8,7 @@ use App\Entity\InvolvedSerieCompany;
 use App\Entity\Serie;
 use App\Entity\SerieAnimeTheme;
 use App\Entity\SerieCompany;
+use App\Entity\SerieUpdate;
 use App\Repository\AnimeGenreRepository;
 use App\Repository\AnimeThemeRepository;
 use App\Repository\InvolvedSerieCompanyRepository;
@@ -17,6 +18,7 @@ use App\Service\StringService;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use JetBrains\PhpStorm\NoReturn;
@@ -90,15 +92,15 @@ class AniListService
         }
 
         $variables = [
-            "search" => mb_convert_kana(str_replace(['é','è'], 'e', $searchName), 'a', 'UTF-8')
+            "search" => mb_convert_kana(str_replace(['é', 'è'], 'e', $searchName), 'a', 'UTF-8')
         ];
 
         $data = $this->request($query, $variables);
 
-        if (!$anime->getLastSeasonName() && !$data){
+        if (!$anime->getLastSeasonName() && !$data) {
 
             $variables = [
-                "search" => mb_convert_kana(str_replace(['é','è'], 'e', $anime->getName()), 'a', 'UTF-8')
+                "search" => mb_convert_kana(str_replace(['é', 'è'], 'e', $anime->getName()), 'a', 'UTF-8')
             ];
 
             $data = $this->request($query, $variables);
@@ -383,6 +385,127 @@ class AniListService
         $this->companyCache = [];
         $this->animeGenreCache = [];
         $this->animeThemeCache = [];
+    }
+
+
+    /**
+     * @param Serie $anime
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function updateNextDate(Serie $anime)
+    {
+
+
+        $query = 'query ($search: String) { Media (search: $search, type: ANIME) { status, nextAiringEpisode{airingAt}, startDate{day, month, year}, relations{ edges{relationType}, nodes{title{english, romaji}} } }}';
+
+        $searchName = $anime->getNameEng();
+
+        if ($anime->getLastSeasonName()) {
+            $searchName = $anime->getLastSeasonName();
+        }
+
+        $variables = [
+            "search" => mb_convert_kana(str_replace(['é', 'è'], 'e', $searchName), 'a', 'UTF-8')
+        ];
+
+        $data = $this->request($query, $variables);
+
+        foreach ($data['relations']['edges'] as $key => $relation) {
+
+            if ($relation['relationType'] === "SEQUEL") {
+
+                $englishName = $data['relations']['nodes'][$key]['title']['english'];
+
+                $searchName = $data['relations']['nodes'][$key]['title']['romaji'];
+
+                if ($englishName) {
+
+                    $anime->setLastSeasonName($englishName);
+                    $searchName = $englishName;
+
+                }
+
+                $variables = [
+                    "search" => mb_convert_kana(str_replace(['é', 'è'], 'e', $searchName), 'a', 'UTF-8')
+                ];
+
+                $data = $this->request($query, $variables);
+
+                break;
+
+            }
+
+        }
+
+        $animeUpdate = new SerieUpdate();
+        $animeUpdate->setUpdateDate(new DateTime());
+        $animeUpdate->setSerie($anime);
+
+        $next = null;
+        $nextType = null;
+
+        if (isset($data['nextAiringEpisode']['airingAt'])) {
+
+            $next = new DateTime(date('Y-m-d', $data['nextAiringEpisode']['airingAt']));
+
+        }elseif ($data['status'] === "NOT_YET_RELEASED") {
+
+            $year = $data['startDate']['year'];
+
+            if ($year) {
+
+                $day = $data['startDate']['day'];
+                $month = $data['startDate']['month'];
+
+                if (!$day) {
+                    $day = 1;
+                    $nextType = 'month';
+                }
+
+                if (!$month) {
+                    $month = 1;
+                    $nextType = 'year';
+                }
+
+                $next = new DateTime($year.'-'.$month.'-'.$day);
+
+            }
+
+        }
+
+        if ($anime->getNextAired() != $next) {
+
+            $animeUpdate->setAiredOld($anime->getNextAired());
+            $animeUpdate->setAiredNew($next);
+            $anime->setNextAired($next);
+
+            if ($anime->getNextAiredFormat() != $nextType){
+                $animeUpdate->setAiredTypeOld($anime->getNextAiredFormat());
+                $animeUpdate->setAiredTypeNew($nextType);
+                $anime->setNextAiredFormat($nextType);
+            }
+
+            $this->manager->persist($anime);
+            $this->manager->persist($animeUpdate);
+
+        }
+
+        if ($data['status'] !== $anime->getStatus()) {
+
+            $animeUpdate->setStatusOld($anime->getStatus());
+            $animeUpdate->setStatusNew($data['status']);
+
+            $anime->setStatus($data['status']);
+
+            $this->manager->persist($anime);
+            $this->manager->persist($animeUpdate);
+
+        }
+
+        $this->manager->flush();
+
     }
 
 }
