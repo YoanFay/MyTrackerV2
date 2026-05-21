@@ -48,6 +48,7 @@ class FrenchDateExtension extends AbstractExtension
             new TwigFilter('dateFWithHour', [$this, 'frenchFormatDateWithHour']),
             new TwigFilter('dateFNoDay', [$this, 'frenchFormatDateNoDay']),
             new TwigFilter('dateFNoDayWithHour', [$this, 'frenchFormatDateNoDayWithHour']),
+            new TwigFilter('dateMY', [$this, 'frenchMonthYear']),
         ];
     }
 
@@ -226,5 +227,29 @@ class FrenchDateExtension extends AbstractExtension
 
         // Return date
         return $numberDay.$suffix." ".$month." ".$year.' - '.$date->format('H').':'.$date->format('i');
+    }
+
+
+    /**
+     * @param DateTime|string $date
+     *
+     * @return string
+     * @throws Exception
+     */
+    public function frenchMonthYear(DateTime|string $date): string
+    {
+
+        if (is_string($date)) {
+            $date = new DateTime($date);
+        }
+
+        // Month
+        $month = self::MONTHS[$date->format('n') - 1];
+
+        // Year
+        $year = $date->format('Y');
+
+        // Return date
+        return $month." ".$year;
     }
 }

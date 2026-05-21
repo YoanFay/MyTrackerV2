@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello HomepageController!{% endblock %}
+
+{% block body %}
+    <div class="w-75">
+
+        <h1 class="title-zarbi">MyTracker</h1>
+        <div class="mb-3">
+            <h2>Sortie du jour</h2>
+            <div class="col-12 d-flex flex-row flex-wrap justify-content-around">
+                {% for serie in series %}
+                    <a class="col-5 col-lg-2 mb-3 me-lg-1" href="{{ path('serie_details', {'id': serie.id}) }}">
+                        <img class="w-100" src="/image/serie/poster/{{ serie.tvdbId }}.jpeg">
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <div>
+            <h2>Info du jour</h2>
+            <div class="col-12 d-flex flex-row flex-wrap justify-content-around">
+                {% for update in serieUpdates %}
+                    <div class="card col-5 col-lg-2 mb-3 me-lg-1">
+                        <div class="card-header p-0">
+                            <a href="{{ path('serie_details', {'id': update.serie.id}) }}">
+                                <img class="w-100" src="/image/serie/poster/{{ update.serie.tvdbId }}.jpeg">
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                {% if update.statusNew in ['FINISHED', 'Ended'] %}
+                                    Terminé
+                                {% elseif update.statusNew == "NOT_YET_RELEASED" %}
+                                    {% if update.airedNew == null %}
+                                        Annoncé (Sans date)
+                                    {% else %}
+                                        {% if update.airedTypeNew == "year" %}
+                                            Annoncé pour {{ update.airedNew|date('Y') }}
+                                        {% elseif update.airedTypeNew == "month" %}
+                                            Annoncé pour {{ update.airedNew|dateMY }}
+                                        {% else %}
+                                            Prochain épisode le {{ update.airedNew|date('d/m/Y') }}
+                                        {% endif %}
+                                    {% endif %}
+                                {% elseif update.statusNew == null and update.airedNew %}
+                                    Prochain épisode le {{ update.airedNew|date('d/m/Y') }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

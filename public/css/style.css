@@ -1,3 +1,8 @@
+@font-face {
+    font-family: Zarbi;
+    src: url(../font/Unown.ttf);
+}
+
 body{
     background-color: rgb(31, 31, 30) !important;
     color: rgb(250, 249, 245) !important;
@@ -6,6 +11,13 @@ body{
 .title-date{
     color: rgb(174, 173, 164);
     font-family: Kalam, serif;
+}
+
+.title-zarbi{
+    font-family: Zarbi, serif;
+    font-size: 400%;
+    color: rgb(67, 159, 208);
+    text-align: center;
 }
 
 .card{
@@ -69,6 +81,10 @@ body{
 .cover-div{
     width: 400px;
     height: 588px;
+}
+
+.miniature{
+    width: 15%;
 }
 
 /* LINK */
