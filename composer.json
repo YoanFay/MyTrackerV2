@@ -6,7 +6,10 @@
     "require": {
         "php": ">=8.2",
         "ext-ctype": "*",
+        "ext-gd": "*",
         "ext-iconv": "*",
+        "ext-mbstring": "*",
+        "bugsnag/bugsnag-symfony": "^2.0",
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
@@ -16,9 +19,7 @@
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.4.*",
         "symfony/runtime": "7.4.*",
-        "symfony/yaml": "7.4.*",
-        "ext-gd": "*",
-        "ext-mbstring": "*"
+        "symfony/yaml": "7.4.*"
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4",

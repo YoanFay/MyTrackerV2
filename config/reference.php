@@ -951,6 +951,39 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     dump_destination?: scalar|Param|null, // A stream URL where dumps should be written to. // Default: null
  *     theme?: "dark"|"light"|Param, // Changes the color of the dump() output when rendered directly on the templating. "dark" (default) or "light". // Default: "dark"
  * }
+ * @psalm-type BugsnagConfig = array{
+ *     api_key?: scalar|Param|null, // Default: null
+ *     endpoint?: scalar|Param|null, // Default: null
+ *     callbacks?: bool|Param, // Default: true
+ *     user?: bool|Param, // Default: true
+ *     app_type?: scalar|Param|null, // Default: null
+ *     app_version?: scalar|Param|null, // Default: null
+ *     batch_sending?: bool|Param, // Default: true
+ *     hostname?: scalar|Param|null, // Default: null
+ *     send_code?: bool|Param, // Default: true
+ *     release_stage?: scalar|Param|null, // Default: null
+ *     strip_path?: scalar|Param|null, // Default: null
+ *     project_root?: scalar|Param|null, // Default: null
+ *     auto_notify?: bool|Param, // Default: true
+ *     resolver?: scalar|Param|null, // Default: "Bugsnag\\BugsnagBundle\\Request\\SymfonyResolver"
+ *     factory?: scalar|Param|null, // Default: "Bugsnag\\BugsnagBundle\\DependencyInjection\\ClientFactory"
+ *     client?: scalar|Param|null, // Default: "Bugsnag\\Client"
+ *     listener?: scalar|Param|null, // Default: "Bugsnag\\BugsnagBundle\\EventListener\\BugsnagListener"
+ *     notify_release_stages?: list<scalar|Param|null>,
+ *     filters?: list<scalar|Param|null>,
+ *     shutdown?: scalar|Param|null, // Default: "Bugsnag\\BugsnagBundle\\EventListener\\BugsnagShutdown"
+ *     strip_path_regex?: scalar|Param|null, // Default: null
+ *     project_root_regex?: scalar|Param|null, // Default: null
+ *     guzzle?: scalar|Param|null, // Default: null
+ *     memory_limit_increase?: scalar|Param|null, // Default: false
+ *     discard_classes?: list<scalar|Param|null>,
+ *     redacted_keys?: list<scalar|Param|null>,
+ *     feature_flags?: list<array{ // Default: []
+ *         name?: scalar|Param|null,
+ *         variant?: scalar|Param|null,
+ *     }>,
+ *     max_breadcrumbs?: scalar|Param|null, // Default: null
+ * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
@@ -959,6 +992,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     doctrine?: DoctrineConfig,
  *     doctrine_migrations?: DoctrineMigrationsConfig,
  *     twig?: TwigConfig,
+ *     bugsnag?: BugsnagConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -970,6 +1004,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         twig?: TwigConfig,
  *         web_profiler?: WebProfilerConfig,
  *         debug?: DebugConfig,
+ *         bugsnag?: BugsnagConfig,
  *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
@@ -979,6 +1014,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         twig?: TwigConfig,
+ *         bugsnag?: BugsnagConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -989,6 +1025,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         twig?: TwigConfig,
  *         web_profiler?: WebProfilerConfig,
+ *         bugsnag?: BugsnagConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,
