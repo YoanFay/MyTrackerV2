@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\Episode;
 use App\Entity\Serie;
 use App\Repository\SerieRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class SerieController extends AbstractController
@@ -20,6 +22,7 @@ final class SerieController extends AbstractController
     #[Route('/serie/{id}', name: 'serie_details')]
     public function details(
         SerieRepository $serieRepository,
+        Session         $session,
         int             $id,
     ): Response
     {
@@ -85,6 +88,17 @@ final class SerieController extends AbstractController
 
         }
 
+        $back = $session->get('backRouteDetails');
+
+        if (!$back) {
+
+            $episodes = end($episodeList);
+            $lastEpisode = end($episodes)->getEpisodeShows()->getValues();
+            $lastShow = end($lastEpisode)->getShowDate();
+
+            $back = $this->generateUrl('history_date', ['year' => $lastShow->format('Y'), 'month' => $lastShow->format('m')]);
+        }
+
         return $this->render('serie/details.html.twig', [
             'serie' => $serie,
             'countEpisodeShow' => $countEpisodeShow,
@@ -94,6 +108,7 @@ final class SerieController extends AbstractController
             'networks' => $networks,
             'tvdbTagList' => $tvdbTagList,
             'episodeList' => $episodeList,
+            'back' => $back,
         ]);
     }
 }

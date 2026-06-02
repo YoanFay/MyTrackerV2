@@ -3,68 +3,84 @@
     src: url(../font/Unown.ttf);
 }
 
-body{
+body {
     background-color: rgb(31, 31, 30) !important;
     color: rgb(250, 249, 245) !important;
 }
 
-.title-date{
+.title-date {
     color: rgb(174, 173, 164);
     font-family: Kalam, serif;
 }
 
-.title-zarbi{
+.title-zarbi {
     font-family: Zarbi, serif;
     font-size: 400%;
     color: rgb(67, 159, 208);
     text-align: center;
+    user-select: none;
+    cursor: pointer;
 }
 
-.card{
+.card {
     background-color: rgb(48, 48, 46) !important;
 }
 
-.max-content{
+.max-content {
     width: max-content;
 }
 
-.separator{
+.separator {
     border-right: solid #e0e0e0;
+}
+
+/* MENU */
+
+nav#menuNav {
+    max-height: 0;
+    overflow: hidden;
+    background-color: rgb(48, 48, 46);
+    border-radius: 8px;
+    transition: max-height 0.3s ease;
+}
+
+nav#menuNav.show {
+    max-height: 150px;
 }
 
 /* HISTORY */
 
-.history-card{
+.history-card {
     width: 95%;
 }
 
 /* BADGE */
 
-.badge-total{
+.badge-total {
     color: rgb(26, 150, 29) !important;
     background-color: rgb(192, 255, 199) !important;
     font-size: 11px;
 }
 
-.badge-anime{
+.badge-anime {
     color: rgb(144, 29, 201) !important;
     background-color: rgb(239, 207, 255) !important;
     font-size: 11px;
 }
 
-.badge-series{
+.badge-series {
     color: rgb(131, 117, 20) !important;
     background-color: rgb(255, 253, 207) !important;
     font-size: 11px;
 }
 
-.badge-replay{
+.badge-replay {
     color: rgb(201, 23, 23) !important;
     background-color: rgb(255, 197, 197) !important;
     font-size: 11px;
 }
 
-.badge-movie{
+.badge-movie {
     color: rgb(29, 41, 171) !important;
     background-color: rgb(207, 217, 255) !important;
     font-size: 11px;
@@ -72,29 +88,29 @@ body{
 
 /* IMAGE */
 
-.cover{
+.cover {
     width: 400px;
     height: 588px;
     position: fixed;
 }
 
-.cover-div{
+.cover-div {
     width: 400px;
     height: 588px;
 }
 
-.miniature{
+.miniature {
     width: 15%;
 }
 
 /* LINK */
 
-.hide-link{
+.hide-link {
     color: inherit;
     text-decoration: none;
 }
 
-.hide-link:hover{
+.hide-link:hover {
     color: #e003e0;
 }
 
@@ -113,18 +129,18 @@ body{
     opacity: 1;
 }
 
-.arrow-rotate{
+.arrow-rotate {
     transition: transform 0.3s ease;
 }
 
-.arrow-rotate.open{
+.arrow-rotate.open {
     transition: transform 0.3s ease;
     transform: rotate(180deg);
 }
 
 @media only screen and (max-width: 1370px) {
 
-    .max-content{
+    .max-content {
         width: inherit;
     }
 
@@ -132,22 +148,22 @@ body{
 
 @media only screen and (max-width: 600px) {
 
-    .cover{
+    .cover {
         width: 100%;
         height: calc((100vw * 1000) / 680);
         position: static;
     }
 
-    .cover-div{
+    .cover-div {
         width: initial;
         height: initial;
     }
 
-    .history-card{
+    .history-card {
         width: 97%;
     }
 
-    .separator{
+    .separator {
         border-right: none;
         border-bottom: solid #e0e0e0;
     }

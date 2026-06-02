@@ -31,9 +31,30 @@
     {% endif %}
 </head>
 <body class="d-flex align-items-center flex-column">
+<h1 id="showMenu" class="title-zarbi mt-3">MyTracker</h1>
+
+<nav id="menuNav">
+    <ul class="m-3">
+        <li><a class="hide-link" href="{{ path('homepage') }}">Accueil</a></li>
+        <li><a class="hide-link" href="{{ path('history') }}">Historique</a></li>
+    </ul>
+</nav>
 {% block body %}{% endblock %}
+
 </body>
 
 {% block scripts %}
 {% endblock %}
+
+
+<script>
+
+    const showMenu = document.getElementById("showMenu");
+    const menuNav = document.getElementById("menuNav");
+
+    showMenu.addEventListener("click", () => {
+        menuNav.classList.toggle('show');
+    })
+
+</script>
 </html>

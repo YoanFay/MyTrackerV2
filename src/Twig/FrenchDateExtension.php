@@ -49,6 +49,7 @@ class FrenchDateExtension extends AbstractExtension
             new TwigFilter('dateFNoDay', [$this, 'frenchFormatDateNoDay']),
             new TwigFilter('dateFNoDayWithHour', [$this, 'frenchFormatDateNoDayWithHour']),
             new TwigFilter('dateMY', [$this, 'frenchMonthYear']),
+            new TwigFilter('dateM', [$this, 'frenchMonth']),
         ];
     }
 
@@ -251,5 +252,18 @@ class FrenchDateExtension extends AbstractExtension
 
         // Return date
         return $month." ".$year;
+    }
+
+
+    /**
+     * @param int $date
+     *
+     * @return string
+     */
+    public function frenchMonth(int $date): string
+    {
+
+        // Return month
+        return self::MONTHS[$date - 1];
     }
 }

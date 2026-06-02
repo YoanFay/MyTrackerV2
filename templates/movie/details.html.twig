@@ -6,7 +6,7 @@
     <div class="w-100 p-3 d-flex flex-column-reverse flex-lg-row justify-content-between">
         <div>
             <h1>
-                {{ movie.name }} ({{movie.duration|MsToMS}})
+                {{ movie.name }} ({{ movie.duration|MsToMS }})
             </h1>
             <h2>Date de sortie : {{ movie.releaseDate|dateFNoDay }}</h2>
 
@@ -34,6 +34,10 @@
                         {% endfor %}
                     </ul>
                 </div>
+            </div>
+
+            <div class="w-100 p-4">
+                <a class="btn btn-primary" href="{{ back }}">Retour</a>
             </div>
 
         </div>

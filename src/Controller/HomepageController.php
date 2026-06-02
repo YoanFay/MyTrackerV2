@@ -6,7 +6,9 @@ use App\Repository\SerieRepository;
 use App\Repository\SerieUpdateRepository;
 use DateTime;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class HomepageController extends AbstractController
@@ -16,8 +18,12 @@ final class HomepageController extends AbstractController
     (
         SerieRepository $serieRepository,
         SerieUpdateRepository $serieUpdateRepository,
+        Request               $request,
+        Session               $session,
     ): Response
     {
+
+        $session->set('backRouteDetails', $request->getUri());
 
         $series = $serieRepository->findBy(['nextAired' => new DateTime()]);
 
