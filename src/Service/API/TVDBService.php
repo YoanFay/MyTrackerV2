@@ -295,7 +295,6 @@ class TVDBService
         $data = self::getData("/episodes/".$episode->getTvdbId());
 
         $serie = $episode->getSerie();
-
         if ($data !== null && $data['status'] === "success") {
 
             if (!$data['data']['name']) {
@@ -315,6 +314,8 @@ class TVDBService
             if ($data['data']['seasonNumber']) {
                 $episode->setSeasonNumber($data['data']['seasonNumber']);
             }
+            $episode->setName($data['data']['name'] ?? 'TBA');
+            $episode->setIsNameVf(false);
             $this->updateEpisodeName($episode);
         }
     }
@@ -333,7 +334,7 @@ class TVDBService
         $data = self::getData("/episodes/".$episode->getTvdbId()."/translations/fra");
 
         if ($data !== null && $data['status'] === "success") {
-            $episode->setName($data['data']['name']);
+            $episode->setName($data['data']['name'] ?? "TBA");
             $episode->setIsNameVf(true);
         }
     }

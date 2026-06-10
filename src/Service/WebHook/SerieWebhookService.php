@@ -116,7 +116,7 @@ class SerieWebhookService
         if (!$serie) {
 
             $serie = new Serie();
-            $serie->setName($data['grandparentTitle']);
+            $serie->setName($data['grandparentTitle'] ?? "TBA");
             $serie->setPlexId($seriePlexId);
             $serie->setSlug($this->stringService->slugify($data['grandparentTitle']));
             $serie->setSerieType($serieType);
@@ -133,6 +133,7 @@ class SerieWebhookService
             $episode->setSerie($serie);
             $episode->setPlexId($episodePlexId);
             $episode->setTvdbId($episodeTVDBId);
+            $episode->setName('TBA');
 
             if ($episode->getTvdbId()) {
 
@@ -333,7 +334,7 @@ class SerieWebhookService
                 $serieType = $this->addReplayType();
             }
 
-        } else if ($serieType === "Séries") {
+        } else if ($serieType === "Séries" || $serieType === "Series") {
 
             if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Séries'])) {
                 $serieType = $this->addSerieType();

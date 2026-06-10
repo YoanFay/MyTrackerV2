@@ -29,8 +29,6 @@ final class MovieController extends AbstractController
         /** @var Movie $movie */
         $movie = $movieRepository->find($id);
 
-        dump($movie->getMovieShows()->getValues());
-
         $back = $session->get('backRouteDetails');
 
         if (!$back) {
