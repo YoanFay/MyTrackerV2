@@ -20,6 +20,7 @@ class MsToHM extends AbstractExtension
             new TwigFilter('MsToHM', [$this, 'convertMillisecondsToHoursMinutes']),
             new TwigFilter('MsToMS', [$this, 'convertMillisecondsToMinutesSeconds']),
             new TwigFilter('SToHM', [$this, 'convertSecondsToHoursMinutes']),
+            new TwigFilter('MToHM', [$this, 'convertMinutesToHoursMinutes']),
         ];
     }
 
@@ -76,5 +77,17 @@ class MsToHM extends AbstractExtension
         }
 
         return sprintf('%dh%02d', $hours, $minutes);
+    }
+
+    /**
+     * @param int $minutes
+     * @return string
+     */
+    public function convertMinutesToHoursMinutes(int $minutes): string
+    {
+        $hours = intdiv($minutes, 60);
+        $mins  = $minutes % 60;
+
+        return $mins === 0 ? "{$hours}h" : sprintf('%dh%02d', $hours, $mins);
     }
 }

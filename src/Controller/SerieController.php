@@ -19,7 +19,7 @@ final class SerieController extends AbstractController
      *
      * @return Response
      */
-    #[Route('/serie/{id}', name: 'serie_details')]
+    #[Route('/serie/{id}', name: 'serie_details', requirements: ['id' => '\d+'])]
     public function details(
         SerieRepository $serieRepository,
         Session         $session,

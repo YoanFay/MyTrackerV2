@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+
+    <div class="flex-grow-1 w-100 d-flex flex-column justify-content-center align-items-center bg-game"{% if background %} style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/image/game/background/{{ game.igdbId }}.jpeg')" {% endif %}>
+        <div class="card">
+            <div class="card-header">
+                {{ formTitle }}
+            </div>
+            <div class="card-body">
+                {{ form_start(form) }}
+                {{ form_end(form) }}
+                <a class="btn btn-secondary mt-1" href="{{ path('game_details', {'id': game.id}) }}">Retour</a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

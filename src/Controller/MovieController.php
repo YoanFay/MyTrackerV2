@@ -18,7 +18,7 @@ final class MovieController extends AbstractController
      *
      * @return Response
      */
-    #[Route('/movie/{id}', name: 'movie_details')]
+    #[Route('/movie/{id}', name: 'movie_details', requirements: ['id' => '\d+'])]
     public function details(
         MovieRepository $movieRepository,
         Session         $session,

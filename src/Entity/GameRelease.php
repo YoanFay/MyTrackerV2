@@ -26,6 +26,10 @@ class GameRelease
     #[ORM\JoinColumn(nullable: false)]
     private Game $game;
 
+    #[ORM\ManyToOne(inversedBy: 'gameReleases')]
+    #[ORM\JoinColumn(nullable: false)]
+    private GameReleaseStatus $status;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -63,6 +67,18 @@ class GameRelease
     public function setGame(?Game $game): static
     {
         $this->game = $game;
+
+        return $this;
+    }
+
+    public function getStatus(): ?GameReleaseStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?GameReleaseStatus $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

@@ -4,6 +4,7 @@
 }
 
 body {
+    min-height: 100vh !important;
     background-color: rgb(31, 31, 30) !important;
     color: rgb(250, 249, 245) !important;
 }
@@ -136,6 +137,12 @@ nav#menuNav.show {
 .arrow-rotate.open {
     transition: transform 0.3s ease;
     transform: rotate(180deg);
+}
+
+.bg-game {
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-attachment: fixed;
 }
 
 @media only screen and (max-width: 1370px) {

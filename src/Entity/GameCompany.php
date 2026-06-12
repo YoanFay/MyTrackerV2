@@ -20,8 +20,8 @@ class GameCompany
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private DateTime $createdAt;
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?DateTime $createdAt = null;
 
     #[ORM\Column(length: 255)]
     private string $slug;
@@ -69,7 +69,7 @@ class GameCompany
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTime $createdAt): static
+    public function setCreatedAt(?DateTime $createdAt): static
     {
         $this->createdAt = $createdAt;
 

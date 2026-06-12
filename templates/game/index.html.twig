@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Jeux{% endblock %}
+
+{% block body %}
+
+    <div class="w-75">
+
+        <h2>Liste des jeux <a class="d-inline" href="{{ path('game_add') }}"><i class="material-icons">add_circle</i></a></h2>
+        <div class="col-12 d-flex flex-row flex-wrap justify-content-around">
+            {% for game in games %}
+                {# <div class="card col-5 col-lg-2 mb-3 me-lg-1">
+                    <div class="card-header p-0">
+                        <a href="{{ path('game_details', {'id': game.id}) }}">
+                            <img class="w-100" src="/image/game/cover/{{ game.igdbId }}.jpeg">
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            {{ game.name }}
+                        </p>
+                    </div>
+                </div> #}
+                <div class="card col-5 col-lg-2 mb-3 me-lg-1">
+                    <a href="{{ path('game_details', {'id': game.id}) }}">
+                        <img class="w-100" src="/image/game/cover/{{ game.igdbId }}.jpeg">
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
