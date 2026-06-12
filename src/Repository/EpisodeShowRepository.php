@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\EpisodeShow;
+use App\Entity\Serie;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -23,14 +25,37 @@ class EpisodeShowRepository extends ServiceEntityRepository
      *
      * @return EpisodeShow[] Returns an array of EpisodeShow objects
      */
-    public function getShowByDate(string $startDate, string $endDate): array
+    public function getShowByDate(string $startDate, string $endDate, User $user): array
     {
 
         return $this->createQueryBuilder('e')
             ->andWhere('e.showDate >= :startDate')
             ->andWhere('e.showDate <= :endDate')
+            ->andWhere('e.user = :user')
             ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate)
+            ->setParameter('user', $user)
+            ->orderBy('e.showDate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
+    /**
+     * @param Serie $serie
+     * @param User  $user
+     *
+     * @return EpisodeShow[] Returns an array of EpisodeShow objects
+     */
+    public function getShowBySerie(Serie $serie, User $user): array
+    {
+
+        return $this->createQueryBuilder('e')
+            ->leftJoin('e.episode' , 'ep')
+            ->andWhere('ep.serie = :serie')
+            ->andWhere('e.user = :user')
+            ->setParameter('serie', $serie)
+            ->setParameter('user', $user)
             ->orderBy('e.showDate', 'DESC')
             ->getQuery()
             ->getResult();

@@ -59,9 +59,10 @@ final class GameController extends AbstractController
 
     #[Route('/game/{id}', name: 'game_details', requirements: ['id' => '\d+'])]
     public function details(
-        KernelInterface $kernel,
-        GameRepository  $gameRepository,
-        int             $id,
+        KernelInterface       $kernel,
+        GameRepository        $gameRepository,
+        GameTrackerRepository $gameTrackerRepository,
+        int                   $id,
     ): Response
     {
 
@@ -112,10 +113,16 @@ final class GameController extends AbstractController
             $background = true;
         }
 
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $gameTrackers = $gameTrackerRepository->findBy(['game' => $game, 'user' => $user]);
+
         return $this->render('game/details.html.twig', [
             'game' => $game,
             'companies' => $companies,
             'background' => $background,
+            'gameTrackers' => $gameTrackers,
         ]);
     }
 
@@ -126,7 +133,6 @@ final class GameController extends AbstractController
         Request         $request,
         ManagerRegistry $managerRegistry,
         GameRepository  $gameRepository,
-        UserRepository  $userRepository,
         int             $id,
     ): Response
     {
@@ -173,7 +179,7 @@ final class GameController extends AbstractController
             $result = $form->getData();
 
             /** @var User $user */
-            $user = $userRepository->findOneBy(['plexName' => 'yoan.f8']);
+            $user = $this->getUser();
 
             $tracker = new GameTracker();
             $tracker->setGame($game);

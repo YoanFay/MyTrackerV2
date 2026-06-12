@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\EpisodeShowRepository;
 use App\Repository\MovieShowRepository;
 use DateTime;
@@ -28,8 +29,11 @@ final class HistoryController extends AbstractController
     ): Response
     {
 
-        $episodeShows = $episodeShowRepository->findAll();
-        $movieShows = $movieShowRepository->findAll();
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $episodeShows = $episodeShowRepository->findBy(['user' => $user]);
+        $movieShows = $movieShowRepository->findBy(['user' => $user]);
 
         $showTime = [
             'total' => 0,
@@ -139,6 +143,8 @@ final class HistoryController extends AbstractController
         ?int                  $month = null,
     ): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
 
         $session->set('backRouteDetails', $request->getUri());
 
@@ -173,13 +179,13 @@ final class HistoryController extends AbstractController
             $startDate = $year.'-'.$month.'-01';
             $endDate = date("Y-m-t 23:59", strtotime($startDate));
 
-            $episodeShows = $episodeShowRepository->getShowByDate($startDate, $endDate);
+            $episodeShows = $episodeShowRepository->getShowByDate($startDate, $endDate, $user);
             $title = 'Historique du mois de '.$monthList[$month - 1].' '.$year;
         } else if ($year !== "all") {
-            $episodeShows = $episodeShowRepository->getShowByDate($year.'-01-01', $year.'-12-31 23:59');
+            $episodeShows = $episodeShowRepository->getShowByDate($year.'-01-01', $year.'-12-31 23:59', $user);
             $title = 'Historique de '.$year;
         } else {
-            $episodeShows = $episodeShowRepository->findAll();
+            $episodeShows = $episodeShowRepository->findBy(['user' => $user]);
             $title = 'Historique de visionnage global';
         }
 

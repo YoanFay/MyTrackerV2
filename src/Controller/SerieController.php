@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Episode;
 use App\Entity\Serie;
+use App\Entity\User;
+use App\Repository\EpisodeShowRepository;
 use App\Repository\SerieRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,21 +23,43 @@ final class SerieController extends AbstractController
      */
     #[Route('/serie/{id}', name: 'serie_details', requirements: ['id' => '\d+'])]
     public function details(
-        SerieRepository $serieRepository,
-        Session         $session,
-        int             $id,
+        SerieRepository       $serieRepository,
+        EpisodeShowRepository $episodeShowRepository,
+        Session               $session,
+        int                   $id,
     ): Response
     {
 
         /** @var Serie $serie */
         $serie = $serieRepository->find($id);
 
+        /** @var User $user */
+        $user = $this->getUser();
+
         $countEpisodeShow = 0;
         $totalDuration = 0;
 
         $episodeList = [];
 
-        foreach ($serie->getEpisodes() as $episode) {
+        $episodeShows = $episodeShowRepository->getShowBySerie($serie, $user);
+
+        foreach ($episodeShows as $episodeShow){
+
+            $episode = $episodeShow->getEpisode();
+
+            if (!isset($episodeList[$episode->getSeasonNumber()])) {
+                $episodeList[$episode->getSeasonNumber()] = [];
+            }
+
+            if (!isset($episodeList[$episode->getSeasonNumber()][$episode->getEpisodeNumber()])) {
+                $episodeList[$episode->getSeasonNumber()][$episode->getEpisodeNumber()] = $episode;
+            }
+
+            $countEpisodeShow++;
+            $totalDuration += $episode->getDuration();
+        }
+
+        /*foreach ($serie->getEpisodes() as $episode) {
             if (!isset($episodeList[$episode->getSeasonNumber()])) {
                 $episodeList[$episode->getSeasonNumber()] = [];
             }
@@ -46,7 +70,7 @@ final class SerieController extends AbstractController
                 $countEpisodeShow++;
                 $totalDuration += $episode->getDuration();
             }
-        }
+        }*/
 
         ksort($episodeList);
 
