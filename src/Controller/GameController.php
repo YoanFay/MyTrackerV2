@@ -502,6 +502,7 @@ final class GameController extends AbstractController
             ])
             ->add('endTime', TextType::class, [
                 'label' => 'Temps pour finir',
+                'required' => false,
                 'attr' => [
                     'placeholder' => '--h--',
                     'class' => 'form-control mb-3'
@@ -592,6 +593,7 @@ final class GameController extends AbstractController
             ])
             ->add('completeTime', TextType::class, [
                 'label' => 'Temps pour 100%',
+                'required' => false,
                 'attr' => [
                     'placeholder' => '--h--',
                     'class' => 'form-control mb-3'
