@@ -49,7 +49,7 @@ final class GameController extends AbstractController
     ): Response
     {
 
-        $games = $gameRepository->findAll();
+        $games = $gameRepository->findBy([],['name' => 'ASC']);
 
         return $this->render('game/index.html.twig', [
             'games' => $games,
