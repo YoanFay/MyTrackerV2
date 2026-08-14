@@ -3,85 +3,106 @@
 {% block title %}Historique{% endblock %}
 
 {% block body %}
-<div class="w-75">
+    <div class="w-75">
 
-    <div class="col-12 d-flex flex-column flex-lg-row justify-content-lg-around">
-        <div class="w-100">
-            <h2 class="my-2 title-date">{{ title }}</h2>
-            <div>
-                <p class="m-0 px-1 badge badge-total">{{ showTime.total|MsToHM }}
-                    de visionnage total</p>
-                {% if showTime.anime != 0 %}
-                <p class="m-0 px-1 badge badge-anime">{{ showTime.anime|MsToHM }}
-                    d'animes</p>
+        <div class="col-12 d-flex flex-column flex-lg-row justify-content-lg-around">
+            <div class="w-100">
+
+                {% if type is defined %}
+                <a href="{{ path("history", {'year': year, 'month': month}) }}" class="text-decoration-none">
+                    {% endif %}
+
+                    <h2 class="my-2 title-date">
+                        {{ title }}
+                    </h2>
+
+                    {% if type is defined %}
+                </a>
                 {% endif %}
-                {% if showTime.series != 0 %}
-                <p class="m-0 px-1 badge badge-series">{{ showTime.series|MsToHM }}
-                    de séries</p>
-                {% endif %}
-                {% if showTime.replay != 0 %}
-                <p class="m-0 px-1 badge badge-replay">{{ showTime.replay|MsToHM }}
-                    de replay</p>
-                {% endif %}
-                {% if showTime.movie != 0 %}
-                <p class="m-0 px-1 badge badge-movie">{{ showTime.movie|MsToHM }}
-                    de films</p>
-                {% endif %}
+
+                <div>
+                    {% if type is not defined %}
+                        <p class="m-0 px-1 badge badge-total">{{ showTime.total|MsToHM }}
+                            de visionnage total</p>
+                    {% endif %}
+                    {% if showTime.anime != 0 %}
+                        <a href="{{ path("history_type", {'type': 'anime', 'year': year, 'month': month}) }}"
+                           class="m-0 px-1 badge badge-anime">{{ showTime.anime|MsToHM }}
+                            d'animes</a>
+                    {% endif %}
+                    {% if showTime.series != 0 %}
+                        <a href="{{ path("history_type", {'type': 'series', 'year': year, 'month': month}) }}"
+                           class="m-0 px-1 badge badge-series">{{ showTime.series|MsToHM }}
+                            de séries</a>
+                    {% endif %}
+                    {% if showTime.replay != 0 %}
+                        <a href="{{ path("history_type", {'type': 'replay', 'year': year, 'month': month}) }}"
+                           class="m-0 px-1 badge badge-replay">{{ showTime.replay|MsToHM }}
+                            de replay</a>
+                    {% endif %}
+                    {% if showTime.movie != 0 %}
+                        <a href="{{ path("history_type", {'type': 'movie', 'year': year, 'month': month}) }}"
+                           class="m-0 px-1 badge badge-movie">{{ showTime.movie|MsToHM }}
+                            de films</a>
+                    {% endif %}
+                </div>
             </div>
+        </div>
+
+        <div class="m-3 d-flex flex-column align-items-end">
+            {% set currentDate = null %}
+
+            {% for history in histories %}
+
+                {% if currentDate == null or currentDate > history.date|date('Y/m/d') %}
+                    {% set currentDate = history.date|date('Y/m/d') %}
+                    <div class="w-100">
+                        <h2 class="my-2 title-date">{{ history.date|dateF }}</h2>
+                        <div>
+                            {% if type is not defined %}
+                                <p class="m-0 px-1 badge badge-total">{{ showTime[history.date|date('Y/m/d')].total|MsToHM }}
+                                    de visionnage total</p>
+                            {% endif %}
+                            {% if showTime[history.date|date('Y/m/d')].anime != 0 %}
+                                <p class="m-0 px-1 badge badge-anime">{{ showTime[history.date|date('Y/m/d')].anime|MsToHM }}
+                                    d'animes</p>
+                            {% endif %}
+                            {% if showTime[history.date|date('Y/m/d')].series != 0 %}
+                                <p class="m-0 px-1 badge badge-series">{{ showTime[history.date|date('Y/m/d')].series|MsToHM }}
+                                    de séries</p>
+                            {% endif %}
+                            {% if showTime[history.date|date('Y/m/d')].replay != 0 %}
+                                <p class="m-0 px-1 badge badge-replay">{{ showTime[history.date|date('Y/m/d')].replay|MsToHM }}
+                                    de replay</p>
+                            {% endif %}
+                            {% if showTime[history.date|date('Y/m/d')].movie != 0 %}
+                                <p class="m-0 px-1 badge badge-movie">{{ showTime[history.date|date('Y/m/d')].movie|MsToHM }}
+                                    de films</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div
+                    class="card border border-secondary rounded-3 d-flex flex-row justify-content-between p-2 my-2 history-card">
+                    <div class="d-flex flex-column align-items-start">
+                        {% if history.type in ['Séries', 'Anime', 'Replay'] %}
+                            <p class="m-0"><a class="hide-link"
+                                              href="{{ path('serie_details', {'id': history.serie.id}) }}">{{ history.serie.name }}</a>
+                                — S{{ '%02d'|format(history.episode.seasonNumber) }}
+                                E{{ '%02d'|format(history.episode.episodeNumber) }} : {{ history.episode.name }}</p>
+                        {% elseif history.type == 'Film' %}
+                            <p class="m-0"><a class="hide-link"
+                                              href="{{ path('movie_details', {'id': history.movie.id}) }}">{{ history.movie.name }}</a>
+                            </p>
+                        {% endif %}
+                        <p class="m-0 mt-2 px-1 badge badge-{{ history.badge }}">{{ history.type }}</p>
+                    </div>
+                    <div class="d-flex flex-column justify-content-center">
+                        <p class="m-0">{{ history.date|date('H:i') }}</p>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
-
-    <div class="m-3 d-flex flex-column align-items-end">
-        {% set currentDate = null %}
-
-        {% for history in histories %}
-
-        {% if currentDate == null or currentDate > history.date|date('Y/m/d') %}
-        {% set currentDate = history.date|date('Y/m/d') %}
-        <div class="w-100">
-            <h2 class="my-2 title-date">{{ history.date|dateF }}</h2>
-            <div>
-                <p class="m-0 px-1 badge badge-total">{{ showTime[history.date|date('Y/m/d')].total|MsToHM }}
-                    de visionnage total</p>
-                {% if showTime[history.date|date('Y/m/d')].anime != 0 %}
-                <p class="m-0 px-1 badge badge-anime">{{ showTime[history.date|date('Y/m/d')].anime|MsToHM }}
-                    d'animes</p>
-                {% endif %}
-                {% if showTime[history.date|date('Y/m/d')].series != 0 %}
-                <p class="m-0 px-1 badge badge-series">{{ showTime[history.date|date('Y/m/d')].series|MsToHM }}
-                    de séries</p>
-                {% endif %}
-                {% if showTime[history.date|date('Y/m/d')].replay != 0 %}
-                <p class="m-0 px-1 badge badge-replay">{{ showTime[history.date|date('Y/m/d')].replay|MsToHM }}
-                    de replay</p>
-                {% endif %}
-                {% if showTime[history.date|date('Y/m/d')].movie != 0 %}
-                <p class="m-0 px-1 badge badge-movie">{{ showTime[history.date|date('Y/m/d')].movie|MsToHM }}
-                    de films</p>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-
-        <div
-            class="card border border-secondary rounded-3 d-flex flex-row justify-content-between p-2 my-2 history-card">
-            <div class="d-flex flex-column align-items-start">
-                {% if history.type in ['Séries', 'Anime', 'Replay'] %}
-                <p class="m-0"><a class="hide-link"
-                                  href="{{ path('serie_details', {'id': history.serie.id}) }}">{{ history.serie.name }}</a>
-                    — S{{ '%02d'|format(history.episode.seasonNumber) }}
-                    E{{ '%02d'|format(history.episode.episodeNumber) }} : {{ history.episode.name }}</p>
-                {% elseif history.type == 'Film' %}
-                <p class="m-0"><a class="hide-link"
-                                  href="{{ path('movie_details', {'id': history.movie.id}) }}">{{ history.movie.name }}</a></p>
-                {% endif %}
-                <p class="m-0 mt-2 px-1 badge badge-{{ history.badge }}">{{ history.type }}</p>
-            </div>
-            <div class="d-flex flex-column justify-content-center">
-                <p class="m-0">{{ history.date|date('H:i') }}</p>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
 {% endblock %}

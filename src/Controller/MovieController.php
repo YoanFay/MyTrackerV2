@@ -36,7 +36,7 @@ final class MovieController extends AbstractController
             $showList = $movie->getMovieShows()->getValues();
             $lastShow = end($showList)->getShowDate();
 
-            $back = $this->generateUrl('history_date', ['year' => $lastShow->format('Y'), 'month' => $lastShow->format('m')]);
+            $back = $this->generateUrl('history', ['year' => $lastShow->format('Y'), 'month' => $lastShow->format('m')]);
         }
 
         return $this->render('movie/details.html.twig', [

@@ -10,8 +10,8 @@ body {
 }
 
 .title-date {
-    color: rgb(174, 173, 164);
-    font-family: Kalam, serif;
+    color: rgb(174, 173, 164) !important;
+    font-family: Kalam, serif !important;
 }
 
 .title-zarbi {
@@ -67,24 +67,28 @@ nav#menuNav.show {
     color: rgb(144, 29, 201) !important;
     background-color: rgb(239, 207, 255) !important;
     font-size: 11px;
+    text-decoration: none;
 }
 
 .badge-series {
     color: rgb(131, 117, 20) !important;
     background-color: rgb(255, 253, 207) !important;
     font-size: 11px;
+    text-decoration: none;
 }
 
 .badge-replay {
     color: rgb(201, 23, 23) !important;
     background-color: rgb(255, 197, 197) !important;
     font-size: 11px;
+    text-decoration: none;
 }
 
 .badge-movie {
     color: rgb(29, 41, 171) !important;
     background-color: rgb(207, 217, 255) !important;
     font-size: 11px;
+    text-decoration: none;
 }
 
 /* IMAGE */

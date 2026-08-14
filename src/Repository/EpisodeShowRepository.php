@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\EpisodeShow;
 use App\Entity\Serie;
+use App\Entity\SerieType;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -15,26 +16,71 @@ class EpisodeShowRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
+
         parent::__construct($registry, EpisodeShow::class);
     }
 
 
     /**
-     * @param string $startDate
-     * @param string $endDate
+     * @param string         $startDate
+     * @param string         $endDate
+     * @param User           $user
+     * @param SerieType|null $serieType
      *
      * @return EpisodeShow[] Returns an array of EpisodeShow objects
      */
-    public function getShowByDate(string $startDate, string $endDate, User $user): array
+    public function getShowByDate(string $startDate, string $endDate, User $user, ?SerieType $serieType = null): array
     {
 
-        return $this->createQueryBuilder('e')
+        $qb = $this->createQueryBuilder('e')
             ->andWhere('e.showDate >= :startDate')
             ->andWhere('e.showDate <= :endDate')
             ->andWhere('e.user = :user')
             ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate)
-            ->setParameter('user', $user)
+            ->setParameter('user', $user);
+
+        if ($serieType) {
+
+            $qb = $qb->leftJoin('e.episode', 'ep')
+                ->leftJoin('ep.serie', 's')
+                ->andWhere('s.serieType = :serieType')
+                ->setParameter('serieType', $serieType);
+
+        }
+
+
+        return $qb
+            ->orderBy('e.showDate', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
+    /**
+     * @param User           $user
+     * @param SerieType|null $serieType
+     *
+     * @return EpisodeShow[] Returns an array of EpisodeShow objects
+     */
+    public function getShowAll(User $user, ?SerieType $serieType = null): array
+    {
+
+        $qb = $this->createQueryBuilder('e')
+            ->andWhere('e.user = :user')
+            ->setParameter('user', $user);
+
+        if ($serieType) {
+
+            $qb = $qb->leftJoin('e.episode', 'ep')
+                ->leftJoin('ep.serie', 's')
+                ->andWhere('s.serieType = :serieType')
+                ->setParameter('serieType', $serieType);
+
+        }
+
+
+        return $qb
             ->orderBy('e.showDate', 'DESC')
             ->getQuery()
             ->getResult();
@@ -51,7 +97,7 @@ class EpisodeShowRepository extends ServiceEntityRepository
     {
 
         return $this->createQueryBuilder('e')
-            ->leftJoin('e.episode' , 'ep')
+            ->leftJoin('e.episode', 'ep')
             ->andWhere('ep.serie = :serie')
             ->andWhere('e.user = :user')
             ->setParameter('serie', $serie)

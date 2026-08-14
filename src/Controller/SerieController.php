@@ -120,7 +120,7 @@ final class SerieController extends AbstractController
             $lastEpisode = end($episodes)->getEpisodeShows()->getValues();
             $lastShow = end($lastEpisode)->getShowDate();
 
-            $back = $this->generateUrl('history_date', ['year' => $lastShow->format('Y'), 'month' => $lastShow->format('m')]);
+            $back = $this->generateUrl('history', ['year' => $lastShow->format('Y'), 'month' => $lastShow->format('m')]);
         }
 
         return $this->render('serie/details.html.twig', [

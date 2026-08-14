@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\EpisodeShow;
+use App\Entity\MovieShow;
 use App\Entity\User;
 use App\Repository\EpisodeShowRepository;
 use App\Repository\MovieShowRepository;
-use DateTime;
+use App\Repository\SerieTypeRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,13 +17,19 @@ use Symfony\Component\Routing\Attribute\Route;
 final class HistoryController extends AbstractController
 {
 
+    private const MONTHS = [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+    ];
+
+
     /**
      * @param EpisodeShowRepository $episodeShowRepository
      * @param MovieShowRepository   $movieShowRepository
      *
      * @return Response
      */
-    #[Route('/history', name: 'history')]
+    #[Route('/history', name: 'history_menu')]
     public function index
     (
         EpisodeShowRepository $episodeShowRepository,
@@ -127,13 +135,15 @@ final class HistoryController extends AbstractController
     /**
      * @param EpisodeShowRepository $episodeShowRepository
      * @param MovieShowRepository   $movieShowRepository
+     * @param Request               $request
+     * @param Session               $session
      * @param int|string            $year
      * @param int|null              $month
      *
      * @return Response
      */
-    #[Route('/history/{year}/{month}', name: 'history_date')]
-    public function historyDate
+    #[Route('/history/{year}/{month}', name: 'history', requirements: ['year' => '\d+|all'])]
+    public function history
     (
         EpisodeShowRepository $episodeShowRepository,
         MovieShowRepository   $movieShowRepository,
@@ -143,120 +153,34 @@ final class HistoryController extends AbstractController
         ?int                  $month = null,
     ): Response
     {
+
         /** @var User $user */
         $user = $this->getUser();
 
         $session->set('backRouteDetails', $request->getUri());
 
-        $monthList = [
-            'Janvier',
-            'Février',
-            'Mars',
-            'Avril',
-            'Mai',
-            'Juin',
-            'Juillet',
-            'Août',
-            'Septembre',
-            'Octobre',
-            'Novembre',
-            'Décembre',
-
-        ];
-
+        [$start, $end, $title] = $this->resolveDateRange($year, $month);
         $histories = [];
+        $showTime = $this->newDayBucket() + ['total' => 0];
 
-        $showTime = [
-            'total' => 0,
-            'anime' => 0,
-            'series' => 0,
-            'replay' => 0,
-            'movie' => 0,
-        ];
-
-        if ($year !== "all" && $month) {
-
-            $startDate = $year.'-'.$month.'-01';
-            $endDate = date("Y-m-t 23:59", strtotime($startDate));
-
-            $episodeShows = $episodeShowRepository->getShowByDate($startDate, $endDate, $user);
-            $title = 'Historique du mois de '.$monthList[$month - 1].' '.$year;
-        } else if ($year !== "all") {
-            $episodeShows = $episodeShowRepository->getShowByDate($year.'-01-01', $year.'-12-31 23:59', $user);
-            $title = 'Historique de '.$year;
-        } else {
-            $episodeShows = $episodeShowRepository->findBy(['user' => $user]);
-            $title = 'Historique de visionnage global';
-        }
-
-        foreach ($episodeShows as $episodeShow) {
-
-            $episode = $episodeShow->getEpisode();
-            $serie = $episode->getSerie();
-
-            if (!isset($showTime[$episodeShow->getShowDate()->format('Y/m/d')])) {
-                $showTime[$episodeShow->getShowDate()->format('Y/m/d')] = [
-                    'total' => 0,
-                    'anime' => 0,
-                    'series' => 0,
-                    'replay' => 0,
-                    'movie' => 0,
-                ];
-            }
-
-            $showTime[$serie->getSerieType()->getSlug()] += $episode->getDuration();
-            $showTime['total'] += $episode->getDuration();
-
-            $showTime[$episodeShow->getShowDate()->format('Y/m/d')][$serie->getSerieType()->getSlug()] += $episode->getDuration();
-            $showTime[$episodeShow->getShowDate()->format('Y/m/d')]['total'] += $episode->getDuration();
-
-            $histories[] = [
-                'serie' => $serie,
-                'episode' => $episode,
-                'date' => $episodeShow->getShowDate(),
-                'type' => $serie->getSerieType()->getName(),
-                'badge' => $serie->getSerieType()->getSlug(),
-            ];
-        }
-
-        if ($year !== "all" && $month) {
-
-            $startDate = $year.'-'.$month.'-01';
-            $endDate = date("Y-m-t 23:59", strtotime($startDate));
-
-            $movieShows = $movieShowRepository->getShowByDate($startDate, $endDate);
-        } else if ($year !== "all") {
-            $movieShows = $movieShowRepository->getShowByDate($year.'-01-01', $year.'-12-31 23:59');
-        } else {
-            $movieShows = $movieShowRepository->findAll();
-        }
+        $movieShows = $start
+            ?
+            $movieShowRepository->getShowByDate($start, $end, $user)
+            :
+            $movieShowRepository->findBy(['user' => $user]);
 
         foreach ($movieShows as $movieShow) {
+            $this->addMovieShow($showTime, $histories, $movieShow);
+        }
 
-            $movie = $movieShow->getMovie();
+        $episodeShows = $start
+            ?
+            $episodeShowRepository->getShowByDate($start, $end, $user)
+            :
+            $episodeShowRepository->getShowAll($user);
 
-            if (!isset($showTime[$movieShow->getShowDate()->format('Y/m/d')])) {
-                $showTime[$movieShow->getShowDate()->format('Y/m/d')] = [
-                    'total' => 0,
-                    'anime' => 0,
-                    'series' => 0,
-                    'replay' => 0,
-                    'movie' => 0,
-                ];;
-            }
-
-            $showTime['movie'] += $movie->getDuration();
-            $showTime['total'] += $movie->getDuration();
-
-            $showTime[$movieShow->getShowDate()->format('Y/m/d')]['movie'] += $movie->getDuration();
-            $showTime[$movieShow->getShowDate()->format('Y/m/d')]['total'] += $movie->getDuration();
-
-            $histories[] = [
-                'movie' => $movie,
-                'date' => $movieShow->getShowDate(),
-                'type' => 'Film',
-                'badge' => 'movie',
-            ];
+        foreach ($episodeShows as $episodeShow) {
+            $this->addEpisodeShow($showTime, $histories, $episodeShow);
         }
 
         usort($histories, function ($a, $b) {
@@ -267,7 +191,198 @@ final class HistoryController extends AbstractController
         return $this->render('history/date.html.twig', [
             'title' => $title,
             'histories' => $histories,
-            'showTime' => $showTime
+            'showTime' => $showTime,
+            'year' => $year,
+            'month' => $month,
+        ]);
+    }
+
+
+    /**
+     * @param int|string  $year
+     * @param int|null    $month
+     * @param string|null $type
+     *
+     * @return array{0: string|null, 1: string|null, 2: string}
+     */
+    private function resolveDateRange(int|string $year, ?int $month, ?string $type = null): array
+    {
+
+        $tilteType = match ($type) {
+            'anime' => "des animes",
+            'series' => "des séries",
+            'replay' => "des replay",
+            'movie' => "des films",
+            default => "",
+        };
+
+        if ($year === 'all') {
+            return [null, null, 'Historique '.$tilteType.' de visionnage global'];
+        }
+
+        if ($month) {
+            $start = "$year-$month-01";
+            $end = date("Y-m-t 23:59", strtotime($start));
+
+            $monthName = self::MONTHS[$month - 1];
+            $prefix = preg_match('/^[aeiouyhAEIOUYH]/', $monthName) ?
+                "d'" :
+                'de ';
+            $title = 'Historique '.$tilteType.' du mois '.$prefix.$monthName.' '.$year;
+
+        } else {
+            $start = "$year-01-01";
+            $end = "$year-12-31 23:59";
+            $title = 'Historique '.$tilteType.' '.$year;
+        }
+
+        return [$start, $end, $title];
+    }
+
+
+    /**
+     * @return array<string, int>
+     */
+    private function newDayBucket(): array
+    {
+
+        return ['total' => 0, 'anime' => 0, 'series' => 0, 'replay' => 0, 'movie' => 0];
+    }
+
+
+    /**
+     * @param array<string, mixed>             $showTime
+     * @param-out array<string, mixed> $showTime
+     * @param array<int, array<string, mixed>> $histories
+     * @param MovieShow                        $movieShow
+     *
+     * @return void
+     */
+    private function addMovieShow(array &$showTime, array &$histories, MovieShow $movieShow): void
+    {
+
+        $movie = $movieShow->getMovie();
+        $day = $movieShow->getShowDate()->format('Y/m/d');
+
+        $showTime[$day] ??= $this->newDayBucket();
+
+        $showTime['movie'] += $movie->getDuration();
+        $showTime['total'] += $movie->getDuration();
+        $showTime[$day]['movie'] += $movie->getDuration();
+        $showTime[$day]['total'] += $movie->getDuration();
+
+        $histories[] = [
+            'movie' => $movie,
+            'date' => $movieShow->getShowDate(),
+            'type' => 'Film',
+            'badge' => 'movie',
+        ];
+    }
+
+
+    /**
+     * @param array<string, mixed>             $showTime
+     * @param-out array<string, mixed> $showTime
+     * @param array<int, array<string, mixed>> $histories
+     * @param EpisodeShow                      $episodeShow
+     *
+     * @return void
+     */
+    private function addEpisodeShow(array &$showTime, array &$histories, EpisodeShow $episodeShow): void
+    {
+
+        $episode = $episodeShow->getEpisode();
+        $serie = $episode->getSerie();
+        $slug = $serie->getSerieType()->getSlug();
+        $day = $episodeShow->getShowDate()->format('Y/m/d');
+
+        $showTime[$day] ??= $this->newDayBucket();
+
+        $showTime[$slug] += $episode->getDuration();
+        $showTime['total'] += $episode->getDuration();
+        $showTime[$day][$slug] += $episode->getDuration();
+        $showTime[$day]['total'] += $episode->getDuration();
+
+        $histories[] = [
+            'serie' => $serie,
+            'episode' => $episode,
+            'date' => $episodeShow->getShowDate(),
+            'type' => $serie->getSerieType()->getName(),
+            'badge' => $slug,
+        ];
+    }
+
+
+    /**
+     * @param EpisodeShowRepository $episodeShowRepository
+     * @param MovieShowRepository   $movieShowRepository
+     * @param Request               $request
+     * @param Session               $session
+     * @param int|string            $year
+     * @param int|null              $month
+     *
+     * @return Response
+     */
+    #[Route('/history/{type}/{year}/{month}', name: 'history_type', requirements: ['type' => 'anime|series|replay|movie', 'year' => '\d+|all'])]
+    public function history_type
+    (
+        EpisodeShowRepository $episodeShowRepository,
+        MovieShowRepository   $movieShowRepository,
+        SerieTypeRepository   $serieTypeRepository,
+        Request               $request,
+        Session               $session,
+        string                $type,
+        int|string            $year,
+        ?int                  $month = null,
+    ): Response
+    {
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $session->set('backRouteDetails', $request->getUri());
+
+        [$start, $end, $title] = $this->resolveDateRange($year, $month, $type);
+        $histories = [];
+        $showTime = $this->newDayBucket() + ['total' => 0];
+
+        if ($type === 'movie') {
+            $movieShows = $start
+                ?
+                $movieShowRepository->getShowByDate($start, $end, $user)
+                :
+                $movieShowRepository->findBy(['user' => $user]);
+
+            foreach ($movieShows as $movieShow) {
+                $this->addMovieShow($showTime, $histories, $movieShow);
+            }
+        } else {
+            $typeNames = ['anime' => 'Anime', 'series' => 'Séries', 'replay' => 'Replay'];
+            $serieType = $serieTypeRepository->findOneBy(['name' => $typeNames[$type]]);
+
+            $episodeShows = $start
+                ?
+                $episodeShowRepository->getShowByDate($start, $end, $user, $serieType)
+                :
+                $episodeShowRepository->getShowAll($user, $serieType);
+
+            foreach ($episodeShows as $episodeShow) {
+                $this->addEpisodeShow($showTime, $histories, $episodeShow);
+            }
+        }
+
+        usort($histories, function ($a, $b) {
+
+            return $b['date'] <=> $a['date'];
+        });
+
+        return $this->render('history/date.html.twig', [
+            'title' => $title,
+            'histories' => $histories,
+            'showTime' => $showTime,
+            'type' => $type,
+            'year' => $year,
+            'month' => $month,
         ]);
     }
 }

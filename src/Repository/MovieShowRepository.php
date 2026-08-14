@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\MovieShow;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -20,16 +21,19 @@ class MovieShowRepository extends ServiceEntityRepository
     /**
      * @param string $startDate
      * @param string $endDate
+     * @param User   $user
      *
      * @return MovieShow[] Returns an array of EpisodeShow objects
      */
-    public function getShowByDate(string $startDate, string $endDate): array
+    public function getShowByDate(string $startDate, string $endDate, User $user): array
     {
         return $this->createQueryBuilder('m')
             ->andWhere('m.showDate >= :startDate')
-            ->setParameter('startDate', $startDate)
             ->andWhere('m.showDate <= :endDate')
+            ->andWhere('m.user = :user')
+            ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate)
+            ->setParameter('user', $user)
             ->orderBy('m.showDate', 'DESC')
             ->getQuery()
             ->getResult();
