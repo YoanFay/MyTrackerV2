@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Movie;
+use App\Entity\User;
 use App\Repository\MovieRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,6 +15,7 @@ final class MovieController extends AbstractController
 
     /**
      * @param MovieRepository $movieRepository
+     * @param Session         $session
      * @param int             $id
      *
      * @return Response
@@ -42,6 +44,21 @@ final class MovieController extends AbstractController
         return $this->render('movie/details.html.twig', [
             'movie' => $movie,
             'back' => $back,
+        ]);
+    }
+
+    #[Route('/movie', name: 'movie')]
+    public function index(
+        MovieRepository $movieRepository
+    ): Response{
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $movies = $movieRepository->moviesByUser($user);
+
+        return $this->render('movie/index.html.twig', [
+            'movies' => $movies
         ]);
     }
 }

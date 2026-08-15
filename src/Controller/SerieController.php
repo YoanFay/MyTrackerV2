@@ -16,8 +16,10 @@ final class SerieController extends AbstractController
 {
 
     /**
-     * @param SerieRepository $serieRepository
-     * @param int             $id
+     * @param SerieRepository       $serieRepository
+     * @param EpisodeShowRepository $episodeShowRepository
+     * @param Session               $session
+     * @param int                   $id
      *
      * @return Response
      */
@@ -58,19 +60,6 @@ final class SerieController extends AbstractController
             $countEpisodeShow++;
             $totalDuration += $episode->getDuration();
         }
-
-        /*foreach ($serie->getEpisodes() as $episode) {
-            if (!isset($episodeList[$episode->getSeasonNumber()])) {
-                $episodeList[$episode->getSeasonNumber()] = [];
-            }
-
-            $episodeList[$episode->getSeasonNumber()][$episode->getEpisodeNumber()] = $episode;
-
-            foreach ($episode->getEpisodeShows() as $show) {
-                $countEpisodeShow++;
-                $totalDuration += $episode->getDuration();
-            }
-        }*/
 
         ksort($episodeList);
 
@@ -133,6 +122,21 @@ final class SerieController extends AbstractController
             'tvdbTagList' => $tvdbTagList,
             'episodeList' => $episodeList,
             'back' => $back,
+        ]);
+    }
+
+    #[Route('/serie', name: 'serie')]
+    public function index(
+        SerieRepository $serieRepository
+    ): Response{
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $series = $serieRepository->seriesByUser($user);
+
+        return $this->render('serie/index.html.twig', [
+            'series' => $series
         ]);
     }
 }

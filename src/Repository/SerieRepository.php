@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Serie;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -67,6 +68,29 @@ class SerieRepository extends ServiceEntityRepository
             ->andWhere("s.isFollow = true")
             ->getQuery()
             ->getResult();
+
+    }
+
+
+    /**
+     * @param User $user
+     *
+     * @return Serie[] Returns an array of Movie objects
+     */
+    public function seriesByUser(User $user): array
+    {
+
+        return $this->createQueryBuilder('s')
+            ->select('s')
+            ->leftJoin('s.episodes', 'e')
+            ->leftJoin('e.episodeShows', 'es')
+            ->andWhere('es.user = :user')
+            ->setParameter('user', $user)
+            ->groupBy('s.id')
+            ->orderBy('MAX(es.showDate)', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
 
     }
 

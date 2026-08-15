@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Série{% endblock %}
+
+{% block body %}
+
+    <div class="w-75">
+
+        <h2>Liste des séries {#<a class="d-inline" href="{{ path('game_add') }}"><i class="material-icons">add_circle</i></a>#}</h2>
+        <div class="col-12 d-flex flex-row flex-wrap justify-content-around">
+            {% for serie in series %}
+                <div class="card col-5 col-lg-2 mb-3 me-lg-1">
+                    <div class="card-header p-0">
+                        <a href="{{ path('serie_details', {'id': serie.id}) }}">
+                            <img class="w-100" src="/image/serie/poster/{{ serie.tvdbId }}.jpeg">
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            {{ serie.name }}
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

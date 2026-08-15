@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Movie;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,28 @@ class MovieRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Movie::class);
+    }
+
+
+    /**
+     * @param User $user
+     *
+     * @return Movie[] Returns an array of Movie objects
+     */
+    public function moviesByUser(User $user): array
+    {
+
+        return $this->createQueryBuilder('m')
+            ->select('DISTINCT m')
+            ->leftJoin('m.movieShows', 'ms')
+            ->andWhere('ms.user = :user')
+            ->setParameter('user', $user)
+            ->groupBy('m.id')
+            ->orderBy('MAX(ms.showDate)', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+
     }
 
     //    /**
