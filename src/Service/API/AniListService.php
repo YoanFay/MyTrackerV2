@@ -190,7 +190,7 @@ class AniListService
     public function request(string $query, array $variables): mixed
     {
 
-        dump("REQUEST CALLED");
+        //dump("REQUEST CALLED");
 
         $http = new Client([
             'timeout' => 10
@@ -213,8 +213,8 @@ class AniListService
                 return $data['data']['Media'];
             } catch (GuzzleException $e) {
                 $error++;
-                dump($e->getMessage());
-                dump("Erreur N°".$error." sur ".$errorMax);
+                //dump($e->getMessage());
+                //dump("Erreur N°".$error." sur ".$errorMax);
                 if ($errorMax !== $error) {
                     sleep(10 * $error);
                 }
