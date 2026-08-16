@@ -5,10 +5,14 @@ namespace App\Controller;
 use App\Entity\EpisodeShow;
 use App\Entity\MovieShow;
 use App\Entity\User;
+use App\Form\HistoryAddType;
 use App\Repository\EpisodeShowRepository;
 use App\Repository\MovieShowRepository;
 use App\Repository\SerieTypeRepository;
+use App\Service\WebHook\SerieWebhookService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -316,8 +320,10 @@ final class HistoryController extends AbstractController
     /**
      * @param EpisodeShowRepository $episodeShowRepository
      * @param MovieShowRepository   $movieShowRepository
+     * @param SerieTypeRepository   $serieTypeRepository
      * @param Request               $request
      * @param Session               $session
+     * @param string                $type
      * @param int|string            $year
      * @param int|null              $month
      *
@@ -383,6 +389,62 @@ final class HistoryController extends AbstractController
             'type' => $type,
             'year' => $year,
             'month' => $month,
+        ]);
+    }
+
+
+    /**
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    #[Route('/history/add/{type}', name: 'history_add', requirements: ['type' => 'anime|series|replay|movie'])]
+    public function history_add(
+        SerieWebhookService $serieWebhookService,
+        Request $request,
+        string $type
+    ): Response
+    {
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $form = $this->createFormBuilder(['entries' => []])
+            ->add('entries', CollectionType::class, [
+                'entry_type' => HistoryAddType::class,
+                'allow_add' => true,
+                'allow_delete' => true,
+                'prototype' => true,
+                'by_reference' => false,
+                'label' => false,
+                'entry_options' => [
+                    'attr' => [
+                        'class' => 'd-flex flex-row justify-content-around',
+                    ],
+                ],
+            ])
+            ->add('submit', SubmitType::class, [
+                'label' => 'Enregistrer',
+                'attr' => [
+                    'class' => 'btn btn-success',
+                ],
+            ])
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+
+            foreach ( $data['entries'] as $entry){
+                $serieWebhookService->importSerieById($entry, $type, $user);
+            }
+
+            return $this->redirectToRoute('history_type', ['type' => $type, 'year' => 'all']);
+        }
+
+        return $this->render('history/add.html.twig', [
+            'form' => $form->createView(),
+            'type' => $type,
         ]);
     }
 }

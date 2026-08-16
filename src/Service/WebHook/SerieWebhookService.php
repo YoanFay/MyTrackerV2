@@ -283,9 +283,9 @@ class SerieWebhookService
      * @param int   $seasonNumber
      * @param int   $episodeNumber
      *
-     * @return Episode|false
+     * @return bool|object
      */
-    private function isEpisodeExist(Serie $anime, int $seasonNumber, int $episodeNumber): Episode|false
+    private function isEpisodeExist(Serie $anime, int $seasonNumber, int $episodeNumber): bool|object
     {
 
 
@@ -387,6 +387,93 @@ class SerieWebhookService
         $episodeShow->setUser($user);
         $episodeShow->setEpisode($episode);
         $episodeShow->setShowDate(DateTime::createFromFormat('Y-m-d H-i-s', $showDate));
+
+        $this->manager->persist($episodeShow);
+        $this->manager->flush();
+
+
+    }
+
+
+    /**
+     * @param array<int, mixed> $data
+     * @param string            $serieType
+     * @param User              $user
+     *
+     * @return void
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function importSerieById(array $data, string $serieType, User $user): void
+    {
+
+        $user = $this->manager->find(User::class, $user->getId());
+
+        $episodeTVDBId = $data['id'];
+        $showDate = $data['watchedAt'];
+
+        if ($serieType === "anime") {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Anime'])) {
+                $serieType = $this->addAnimeType();
+            }
+
+        } else if ($serieType === "replay") {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Replay'])) {
+                $serieType = $this->addReplayType();
+            }
+
+        } else if ($serieType === "series") {
+
+            if (!$serieType = $this->serieTypeRepository->findOneBy(['name' => 'Séries'])) {
+                $serieType = $this->addSerieType();
+            }
+
+        }
+
+        $serieTVDBId = $this->TVDBService->getSerieIdByEpisodeId($episodeTVDBId);
+
+        if (!$serie = $this->isSerieExist(null, $episodeTVDBId, $serieTVDBId)) {
+
+            $serie = new Serie();
+            $serie->setSerieType($serieType);
+            $serie->setTvdbId($serieTVDBId);
+
+            $this->TVDBService->updateSerieInfo($serie);
+
+            if ($serieType->getName() === "Anime") {
+
+                $this->aniListService->newAnime($serie);
+            } else {
+
+                $this->TVDBService->newSerie($serie);
+            }
+
+            $this->manager->persist($serie);
+
+        }
+
+        if (!$episode = $this->episodeRepository->findOneBy(['tvdbId' => $episodeTVDBId])) {
+
+            $episode = new Episode();
+            $episode->setSerie($serie);
+            $episode->setTvdbId($episodeTVDBId);
+
+            if ($episode->getTvdbId()) {
+
+                $this->TVDBService->createEpisode($episode);
+
+            }
+
+            $this->manager->persist($episode);
+
+        }
+
+        $episodeShow = new EpisodeShow();
+        $episodeShow->setUser($user);
+        $episodeShow->setEpisode($episode);
+        $episodeShow->setShowDate($showDate);
 
         $this->manager->persist($episodeShow);
         $this->manager->flush();
