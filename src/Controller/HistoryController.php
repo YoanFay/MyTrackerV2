@@ -10,6 +10,8 @@ use App\Repository\EpisodeShowRepository;
 use App\Repository\MovieShowRepository;
 use App\Repository\SerieTypeRepository;
 use App\Service\WebHook\SerieWebhookService;
+use GuzzleHttp\Exception\GuzzleException;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -394,8 +396,8 @@ final class HistoryController extends AbstractController
 
 
     /**
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
      */
     #[Route('/history/add/{type}', name: 'history_add', requirements: ['type' => 'anime|series|replay|movie'])]
     public function history_add(
@@ -446,5 +448,13 @@ final class HistoryController extends AbstractController
             'form' => $form->createView(),
             'type' => $type,
         ]);
+    }
+
+    #[Route('/history/add/choice', name: 'history_choice_add')]
+    public function history_choice_add(
+    ): Response
+    {
+
+        return $this->render('history/choice.html.twig');
     }
 }
