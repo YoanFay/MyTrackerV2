@@ -142,4 +142,47 @@ class MovieWebhookService
 
     }
 
+
+    /**
+     * @param array<int, mixed> $data
+     * @param User  $user
+     *
+     * @return void
+     * @throws GuzzleException
+     */
+    public function importMovieById(array $data, User $user): void
+    {
+
+        $showDate = $data['watchedAt'];
+        $TMDBId = $data['id'];
+
+        if (!$TMDBId) {
+            return;
+        }
+
+        $param = ['tmdbId' => $TMDBId];
+
+        $movie = $this->movieRepository->findOneBy($param);
+
+        if (!$movie) {
+
+            $movie = new Movie();
+            $movie->setTmdbId($TMDBId);
+
+            $this->TMDBService->updateMovieInfo($movie);
+
+            $this->manager->persist($movie);
+
+        }
+
+        $show = new MovieShow();
+        $show->setUser($user);
+        $show->setMovie($movie);
+        $show->setShowDate($showDate);
+
+        $this->manager->persist($show);
+        $this->manager->flush();
+
+    }
+
 }

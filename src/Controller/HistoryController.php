@@ -9,6 +9,7 @@ use App\Form\HistoryAddType;
 use App\Repository\EpisodeShowRepository;
 use App\Repository\MovieShowRepository;
 use App\Repository\SerieTypeRepository;
+use App\Service\WebHook\MovieWebhookService;
 use App\Service\WebHook\SerieWebhookService;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Cache\InvalidArgumentException;
@@ -402,6 +403,7 @@ final class HistoryController extends AbstractController
     #[Route('/history/add/{type}', name: 'history_add', requirements: ['type' => 'anime|series|replay|movie'])]
     public function history_add(
         SerieWebhookService $serieWebhookService,
+        MovieWebhookService $movieWebhookService,
         Request $request,
         string $type
     ): Response
@@ -437,8 +439,18 @@ final class HistoryController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
 
-            foreach ( $data['entries'] as $entry){
-                $serieWebhookService->importSerieById($entry, $type, $user);
+            if ($type === "movie"){
+
+                foreach ( $data['entries'] as $entry){
+                    $movieWebhookService->importMovieById($entry, $user);
+                }
+
+            }else{
+
+                foreach ( $data['entries'] as $entry){
+                    $serieWebhookService->importSerieById($entry, $type, $user);
+                }
+
             }
 
             return $this->redirectToRoute('history_type', ['type' => $type, 'year' => 'all']);
