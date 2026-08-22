@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Episode;
 use App\Entity\Serie;
+use App\Entity\SerieCompany;
 use App\Entity\User;
 use App\Repository\EpisodeShowRepository;
+use App\Repository\SerieCompanyRepository;
 use App\Repository\SerieRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,7 +47,7 @@ final class SerieController extends AbstractController
 
         $episodeShows = $episodeShowRepository->getShowBySerie($serie, $user);
 
-        foreach ($episodeShows as $episodeShow){
+        foreach ($episodeShows as $episodeShow) {
 
             $episode = $episodeShow->getEpisode();
 
@@ -125,10 +127,12 @@ final class SerieController extends AbstractController
         ]);
     }
 
+
     #[Route('/serie', name: 'serie')]
     public function index(
         SerieRepository $serieRepository
-    ): Response{
+    ): Response
+    {
 
         /** @var User $user */
         $user = $this->getUser();
@@ -137,6 +141,50 @@ final class SerieController extends AbstractController
 
         return $this->render('serie/index.html.twig', [
             'series' => $series
+        ]);
+    }
+
+
+    #[Route('/serie/company/{id}', name: 'serie_company')]
+    public function company(
+        SerieCompanyRepository $serieCompanyRepository,
+        SerieRepository        $serieRepository,
+        int                    $id,
+    ): Response
+    {
+
+        /** @var SerieCompany $company */
+        $company = $serieCompanyRepository->findOneBy(['id' => $id]);
+
+        $involvedSerieCompanies = $company->getInvolvedSerieCompanies()->getValues();
+
+        $studios = [];
+        $producers = [];
+        $networks = [];
+
+        foreach ($involvedSerieCompanies as $involvedSerieCompany) {
+
+            $serie = $involvedSerieCompany->getSerie();
+
+            if ($involvedSerieCompany->isStudio()) {
+                $studios[] = $serie;
+            }
+
+            if ($involvedSerieCompany->isProducer()) {
+                $producers[] = $serie;
+            }
+
+            if ($involvedSerieCompany->isNetwork()) {
+                $networks[] = $serie;
+            }
+
+        }
+
+        return $this->render('serie/company.html.twig', [
+            'company' => $company,
+            'studios' => $studios,
+            'producers' => $producers,
+            'networks' => $networks,
         ]);
     }
 }

@@ -40,7 +40,7 @@
                                 Studio :
                                 <ul>
                                     {% for studio in studios %}
-                                        <li>{{ studio.name }}</li>
+                                        <li><a class="hide-link" href="{{path('serie_company', {'id': studio.id})}}">{{ studio.name }}</a></li>
                                     {% endfor %}
                                 </ul>
                             </li>
@@ -50,7 +50,7 @@
                                 Producteur :
                                 <ul>
                                     {% for producer in producers %}
-                                        <li>{{ producer.name }}</li>
+                                        <li><a class="hide-link" href="{{path('serie_company', {'id': producer.id})}}">{{ producer.name }}</a></li>
                                     {% endfor %}
                                 </ul>
                             </li>
@@ -60,7 +60,7 @@
                                 Network :
                                 <ul>
                                     {% for network in networks %}
-                                        <li>{{ network.name }}</li>
+                                        <li><a class="hide-link" href="{{path('serie_company', {'id': network.id})}}">{{ network.name }}</a></li>
                                     {% endfor %}
                                 </ul>
                             </li>

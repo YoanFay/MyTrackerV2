@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\EpisodeShow;
 use App\Entity\Serie;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -79,15 +80,35 @@ class SerieRepository extends ServiceEntityRepository
      */
     public function seriesByUser(User $user): array
     {
+        $qb = $this->createQueryBuilder('s');
 
-        return $this->createQueryBuilder('s')
-            ->select('s')
-            ->leftJoin('s.episodes', 'e')
-            ->leftJoin('e.episodeShows', 'es')
-            ->andWhere('es.user = :user')
+        $subDate = $this->getEntityManager()->createQueryBuilder()
+            ->select('MAX(es2.showDate)')
+            ->from(EpisodeShow::class, 'es2')
+            ->join('es2.episode', 'e2')
+            ->where('e2.serie = s')
+            ->andWhere('es2.user = :user');
+
+        return $qb
+            ->addSelect('(' . $subDate->getDQL() . ') AS HIDDEN derniereVue')
             ->setParameter('user', $user)
-            ->groupBy('s.id')
-            ->orderBy('MAX(es.showDate)', 'DESC')
+            ->orderBy('derniereVue', 'DESC')
+            ->addOrderBy('s.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+    }
+
+
+    /**
+     * @return Serie[] Returns an array of Movie objects
+     */
+    public function seriesCompany($company): array
+    {
+        return $this->createQueryBuilder('s')
+            ->innerJoin('s.involvedSerieCompanies', 'isc')
+            ->andWhere('isc.company = :company')
+            ->setParameter('company', $company)
             ->getQuery()
             ->getResult()
             ;
